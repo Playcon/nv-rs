@@ -880,6 +880,32 @@ the interior `NVDLC01Gala02`, the Puesta del Sol Switching Station).
   exit package from the Auto-Doc finishes at once (MQ01c) and an animated
   pod door moves its collision, so she is not stuck inside it.
 
+**The Gala event (MQ02 "Trigger the Gala Event").**
+`characters/dead-money-gala.txt` (the three escorts' end stage lines run, so
+MQ02 stage 10 starts and the companions are in position); launch
+`NVDLC01EastTownN --official --at 5914,10380,3096,0 --character
+characters/dead-money-gala.txt` (the bell tower's control panel,
+`GalaActivatorREF`, stands there).
+* *Played in the viewer (on current main):* with the quest `NVDLC01GalaEventQuest`
+  started (the tower door's script does it) and MQ02 set to stage 50 (what the
+  panel's "I'm ready. Everyone - trigger the event." line does), the stage's
+  script runs: "Completed the Sierra Madre Gala Event", XP +100, an autosave,
+  the post-Gala ghost people at the Villa enabled, the three companions moved
+  to the theater, the suites and the kitchen, the gauntlet's ghosts, triggers
+  and spawn points enabled. The event's own timer then runs (33 seconds) and
+  enables the six firework loops. The casino gate trigger sets stage 100.
+* *Not played:* the climb to the tower (ladders and stairs), the panel
+  itself: E on it (a talking activator with no `GREETING` line) opens nothing,
+  because the game's rule found so far is "no line: nothing"
+  (`docs/DIALOGUE.md`, `005fa9be`); how a talking activator offers its
+  player topic ("I'm ready...") is not traced [C: in the original, activate
+  the panel and write down what opens]. Also not played: the fireworks'
+  look (`PlayGroup Right` on the display) and the ghost gauntlet.
+* *Guessed [G]:* nothing new.
+* Dense graphics: the tower's area crashed the viewer on a laptop GPU (3 of
+  3 runs with the usual 5 by 5 squares, 1 of 3 with one square); see the
+  branch that makes Dead Money's towns load one square each way.
+
 ### The casino (MQ03)
 
 `characters/dead-money-casino.txt` starts in the casino (`NVDLC01Casino`,

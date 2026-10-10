@@ -18,4 +18,5 @@ Files hold record names only: no game text, models or other assets.
 | `dead-money-casino.txt` | `NVDLC01Casino` | Dead Money Act 3 start: the Villa character with MQ02 finished and `NVDLC01MQ03a` begun, as the Lobby's knockout script leaves it |
 | `dead-money-act2-dean.txt` | `NVDLC01WestTownS` | Dead Money Act 2 with Dean hired instead of Dog (MQ02b begun); start at his rooftop trigger, see `docs/DEAD_MONEY.md` |
 | `dead-money-act2-christine.txt` | `NVDLC01Gala02` | Dead Money Act 2 with Christine hired (MQ02c begun); start by the switching station's elevator, see `docs/DEAD_MONEY.md` |
+| `dead-money-gala.txt` | `NVDLC01EastTownN` | Dead Money Act 2 end: the three escorts done (MQ02 stage 10), at the bell tower's control panel; see `docs/DEAD_MONEY.md` |
 | `dead-money-act2.txt` | `DLC01StartMarker` | Dead Money Act 2 start: the three found (MQ01a to d at stage 100), Elijah's Act 2 greeting said, Dog hired and following (MQ02a begun) |
