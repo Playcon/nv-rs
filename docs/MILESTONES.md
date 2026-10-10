@@ -1097,6 +1097,7 @@ fixes needed by the active route count as blockers; never invent a substitute.
 
 Dead Money, the executive suites (MQ03c, `pr/suites-christine`, 2026-10-10): Christine's greeting and replies, her collar rules, her death with the 30 second timer, the elevator (stage 100) and leaving to survive, all from a test character on current main; not played: winning the fight by shooting, the friendly Christine and the talk-down reply.
 Dead Money, the Tampico theatre (MQ03b, `pr/theater-dean`, 2026-10-10): the key, the holograms, Dean's holotape and the projector show, Dean's death and the escape (stage 100) from a test character with console-line helpers; not played: by hand, the fight, Dean's talk.
+Dead Money, the vault and the ending (MQ03, `pr/vault-ending`, 2026-10-10): the stages 20 to 50 by console line, the vault elevator with Elijah dealt with (stage 100), the Mojave gate and the whole ending slideshow to the bunker, played in the viewer from a test character; not played: the terminal, the vault puzzle, the fight with Elijah.
 
 ## Handoff
 
