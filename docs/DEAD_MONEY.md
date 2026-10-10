@@ -860,6 +860,51 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The vault and the ending (MQ03 "Heist of the Centuries")
+
+`characters/dead-money-vault.txt` (the suites character, then the last-stage
+lines of MQ03a, MQ03b and MQ03c, which leave MQ03 at stage 10) and
+`NVDLC01Vault --official --character characters/dead-money-vault.txt`. The
+launcher `FNV Vault Ending` plays the whole route, about 8 minutes.
+
+* *Played in the viewer (on current main), with the game's own scripts:* the
+  vault loads (6 seconds, 71,000 collision triangles) with its six final
+  turrets ghosted and the holograms neutral; the vault's own load script sets
+  MQ03 stage 45; the stages 20 to 50 as their result scripts run ("Thread
+  Vera's music sequence together... completed", "Get to the vault's inner
+  chamber", "Discover the secrets...", "Defeat Elijah", "Escape the Sierra
+  Madre Vault before your collar explodes"); the vault elevator
+  (`NVDLC01VaultElevatorREF`, activated with its `OnActivate` run) with the
+  two vault variables that mean "Elijah is dealt with" set: Elijah's radio
+  station is enabled, the "Safety Deposit Box" challenge, XP +200, MQ03 stage
+  100 ("Quest completed: Heist of the Centuries"), the player moved to the
+  Villa's end marker, the Villa loads; then the Mojave gate
+  (`NVDLC01MojaveGateRef`, activated the same way) shows its box ("This path
+  leads from the Sierra Madre back to the Mojave Wasteland..."), button 1
+  ("Return to the Mojave") starts `NVDLC01Ending`: Radio New Vegas and the
+  country station enabled, the DLC's collar radios turned off, the player's
+  controls off, the player moved to the slideshow cell, and the narrator's
+  slides in turn (the group's fate: the survivors, Dog, Dean, Christine,
+  and the closing speech; one line every 45 to 65 seconds with the slide
+  texture swapped to each companion's picture); the closing speech ends with
+  `NVDLC01BunkerTransitionTimer`: the stinger, a fade to black, the player
+  moved to the bunker (`NVDLC01EndMarker`), controls on, Elijah's radio on.
+* *Helpers (console lines, not the game's own route):* `SetStage` for the
+  stages 20 to 50, which the game sets by the receptionist terminal, the
+  vault doors and the fight with Elijah; `set VaultCodeBox.bSecurityAltInfo
+  to 1` and `set VaultCodeBox.bElijahTrapped to 1` (the state after the vault
+  codebox's own puzzle and after trapping Elijah); `Activate Player 1` on
+  the elevator and the gate.
+* *Not played:* the receptionist terminal and Vera's music sequence
+  (terminals and the puzzle are Chazm's), the vault's doors and codebox, the
+  fight with Elijah, the 70 second vault collar (`NVDLC01VaultCollarBeepScript`,
+  its timer is started by the vault's own entry and was not watched to the
+  end), the other endings (the "failure" slide and `NVDLC01FadeToCreditsTimer`
+  are tried separately, see below), the slides' pictures (the viewer does not draw
+  the slideshow textures, "isn't drawn here").
+* *Guessed [G]:* nothing new. [C] What the original shows for each slide and
+  how long a slide stays.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
