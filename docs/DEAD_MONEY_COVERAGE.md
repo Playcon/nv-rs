@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 19 PARTIAL, 33 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -53,7 +53,7 @@ The quests with stages and objectives the player sees.
 | Heist of the Centuries (`NVDLC01MQ03`) | 10, 20, 30, 40, 50, 100, 255 | casino interior, receptionist terminal and music sequence puzzle, vault with locks and voice code, elevators, sneaking, a boss fight, collar explosion timer, music, fade to credits | **NOT PLAYED** | Blocked by Act 2 and the Gala for a normal start; the casino itself is not a blocker any more: its interior loads in about 5 seconds and its power switch works (see MQ03a), from the test character `characters/dead-money-casino.txt`. Never tried: the vault, the music-sequence terminal, the fight with Elijah, the optional sneak-out. Repeating stages allowed (flag 0x08). |
 | Put the Beast Down (`NVDLC01MQ03a`) | 5, 10, 20, 30, 40, 50, 60, 100 | casino, key, stealth (not being spotted by Dog), gas valves, dialogue or combat, collar timer | **PARTIAL** | Played: starting in the casino as the Lobby's knock-out script leaves the player (`characters/dead-money-casino.txt`: MQ02 done, MQ03a at stage 5), then the power switch with E (`--use`): MQ03a goes to stage 10, MQ03b and MQ03c start, the slot machines, hologram dealers and bartender come into view, Elijah's intercom speaks. Not played: reaching the switch on foot, the kitchen key, the gas valves, Dog's fight or talk, the collar timer. [G] The detection rules for 'not spotted' use nv-rs's own detection, unverified for this. |
 | Curtain Call at the Tampico (`NVDLC01MQ03b`) | 10, 15, 20, 30, 40, 50, 60, 100 | theatre interior, security holograms, holotape projector, key, combat or dialogue, collar timer | **NOT PLAYED** | Blocked by the casino and by holograms as enemies being untried. |
-| Last Luxuries (`NVDLC01MQ03c`) | 10, 20, 30, 100 | executive suites, combat with a former companion, collar timer | **NOT PLAYED** | Blocked by reaching the suites. A quest script ends it if Christine dies by other means. |
+| Last Luxuries (`NVDLC01MQ03c`) | 10, 20, 30, 100 | executive suites, combat with a former companion, collar timer | **PARTIAL** | Played from `characters/dead-money-suites.txt`: the greeting and the replies up to the fight, the collar rules (proximity, then scanning), Christine's death (XP, objective, 30 second timer), the elevator (stage 100) and leaving to survive, or staying to be killed by the timer. Not played: winning the fight by shooting, the friendly Christine, the talk-down reply, the terminal that turns the holograms on her. [C] How the original balances the fight. |
 | Wake Up the Sierra Madre (`NVDLC01MQ03d`) | 10, 20, 100 | casino electrical closet, power switch, security holograms | **NEVER STARTED** | Nothing starts it: no script, dialogue result, terminal or record in the plugin names its form or sets one of its stages. Its two objectives are the ones MQ03a shows at stage 10 (the electrical closet, restoring power), which the casino switch completes. Leftover content, so it can't be played. [C] The maintainer's note has the console steps to confirm it stays at stage 0 in the original after the switch. |
 
 ### The opening and the ending
