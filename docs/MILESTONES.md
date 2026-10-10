@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the radio quests (`pr/radio-quests`, 2026-10-10): the eight radio quests start; the companion stations' distance rules play from the casino character; the radio conversations are blocked by the missing radio engine.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
