@@ -658,6 +658,7 @@ Goodsprings NPCs unchanged. **Next action:** trace `RecipeMenu` (`007274b0`)
 and the follower rules so the Dead Money routes run without guesses.
 
 Dead Money, Dean's escort (MQ02b, `claude/dean-escort`, 2026-10-10): played in the viewer to stage 40 with the game's own scripts, dialogue and the holograms' terminal items (run as script lines); the ending's result lines complete the quest; no engine change was needed. Not played by hand: the last replies and the terminal screens ([DEAD_MONEY.md](DEAD_MONEY.md), "Act 2"). **Next action:** Christine's escort (MQ02c).
+Dead Money, Christine's escort (MQ02c, `claude/christine-escort`, 2026-10-10): the switching station played in the viewer (her trigger and talk, the electrical box repair with the game's message buttons, the elevator panel); the ending's result lines complete the quest; no engine change was needed beyond the two on their own branches (a travel to the current location, an animated object's collision). Not played: the toxic cloud, the terminals' screens, the ghost gauntlet ([DEAD_MONEY.md](DEAD_MONEY.md), "Act 2"). **Next action:** the Gala event (MQ02).
 
 M2 batch (`claude/m2-physics-3`, 2026-10-06): playtest physics fixes.
 Traced and fixed: a loading place's bodies go into Havok asleep
