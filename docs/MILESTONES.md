@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the developer quest `NVDLC01EnemyTest` (`pr/enemy-test`, 2026-10-10): stages 10 to 32 played by SetStage in a test character.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
