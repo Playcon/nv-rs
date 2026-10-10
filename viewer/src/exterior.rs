@@ -22,15 +22,29 @@ use crate::{FlyCamera, GameFiles, Grading, SceneEntity, Spawner};
 pub const LOAD_RADIUS_DEFAULT: i32 = 2;
 
 /// Worlds too dense for the graphics to hold 25 squares at once (Dead
-/// Money's Residential District lost the device on a laptop GPU within
-/// seconds): they load one square on every side.
-const DENSE_WORLDS: [&str; 1] = ["NVDLC01VillaDean"];
+/// Money's towns lose the device on a laptop GPU within seconds, the
+/// Residential District at once): they load one square on every side. An
+/// accommodation for the graphics memory, not the game's behaviour.
+const DENSE_WORLDS: [&str; 7] = [
+    "NVDLC01Villa",
+    "NVDLC01VillaDean",
+    "NVDLC01VillaChristine",
+    "NVDLC01EastTownS",
+    "NVDLC01EastTownN",
+    "NVDLC01WestTownS",
+    "NVDLC01WestTownN",
+];
 
 static RADIUS_NOW: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1);
 
+/// Whether a world is one of [`DENSE_WORLDS`] (by editor ID, any case).
+fn is_dense(world: &str) -> bool {
+    DENSE_WORLDS.iter().any(|w| w.eq_ignore_ascii_case(world))
+}
+
 /// A world is entered: its load radius.
 fn choose_load_radius(world: &str) {
-    let radius = if DENSE_WORLDS.iter().any(|w| w.eq_ignore_ascii_case(world)) {
+    let radius = if is_dense(world) {
         1
     } else {
         LOAD_RADIUS_DEFAULT
@@ -887,6 +901,21 @@ impl Exterior {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dead_moneys_towns_are_dense_and_the_base_game_is_not() {
+        for w in [
+            "NVDLC01Villa",
+            "nvdlc01eastTownN",
+            "NVDLC01WestTownS",
+            "NVDLC01VillaDean",
+        ] {
+            assert!(is_dense(w), "{w}");
+        }
+        for w in ["WastelandNV", "Goodsprings", "NVDLC01TestMap01"] {
+            assert!(!is_dense(w), "{w}");
+        }
+    }
 
     #[test]
     fn finds_the_ground_under_a_spot() {
