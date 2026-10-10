@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 26 PARTIAL, 26 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -105,14 +105,14 @@ The bomb collar and the stations the collars and speakers play.
 | Quest (editor ID) | Stages | Needs | Status | Notes |
 | --- | --- | --- | --- | --- |
 | Bomb Collar Quest (`NVDLC01BombCollarQuest`) | none | collar timers, speakers, beeps, rumble, explosion, kill, companions | **PARTIAL** | The beeping and the radio interference messages worked in the Villa. Not played: the countdown to the explosion and a death by it, the Christine collar message, the casino collar rules. |
-| Bomb Collar Audio (`NVDLC01RadioSpeakers`) | none | radio station | **NOT PLAYED** | Radio playback isn't built (stations' conversations aren't played). |
-| Dog's Collar Radio (`NVDLC01RadioDog`) | none | radio station | **NOT PLAYED** | As above. |
-| Dean's Collar Radio (`NVDLC01RadioDeanQuest`) | none | radio station | **NOT PLAYED** | As above. |
-| (no name) (`NVDLC01RadioDeanMusic`) | none | radio station music | **NOT PLAYED** | No script; its lines are dialogue only [G]. |
-| Christine's Collar Radio (`NVDLC01RadioChristine`) | none | radio station | **NOT PLAYED** | As above. |
-| Elijah's Collar Radio (`NVDLC01RadioElijah`) | none | radio station, elevator, vault | **NOT PLAYED** | As above. |
-| Vera Radio Dialogue (`NVDLC01RadioCasino`) | none | radio station, music sequence | **NOT PLAYED** | As above; belongs to the casino. |
-| DLC01 Ambient Music (`NVDLC01RadioAMBMusic`) | none | radio station, music | **NOT PLAYED** | As above. |
+| Bomb Collar Audio (`NVDLC01RadioSpeakers`) | none | radio station | **PARTIAL** | Started: runs; only variables. Its radio lines need the radio engine. |
+| Dog's Collar Radio (`NVDLC01RadioDog`) | none | radio station | **PARTIAL** | Started in the casino character: the broadcast flag rules ran (with Dog beside the player, `RadioDog` switched *Dean's* station off and left Dog's on, as the script reads). The lines are radio conversations: no radio playback (`StartRadioConversation` is a no-op). |
+| Dean's Collar Radio (`NVDLC01RadioDeanQuest`) | none | radio station | **PARTIAL** | Started with Dean beside the player: Dean's station switched off, by the script. Radio conversations are not played (no radio engine). |
+| (no name) (`NVDLC01RadioDeanMusic`) | none | radio station music | **PARTIAL** | Started: runs; it has no script (its lines are dialogue only). Needs the radio engine to be heard. |
+| Christine's Collar Radio (`NVDLC01RadioChristine`) | none | radio station | **PARTIAL** | Started with Christine beside the player: her station switched off, by the script. Radio conversations are not played (no radio engine). |
+| Elijah's Collar Radio (`NVDLC01RadioElijah`) | none | radio station, elevator, vault | **PARTIAL** | Started: the quest runs (its script only holds variables); Elijah's radio lines need the radio engine, which nv-rs lacks. |
+| Vera Radio Dialogue (`NVDLC01RadioCasino`) | none | radio station, music sequence | **PARTIAL** | Started: runs; only a line counter. Vera's radio lines need the radio engine. |
+| DLC01 Ambient Music (`NVDLC01RadioAMBMusic`) | none | radio station, music | **PARTIAL** | Started: runs; only two flags. The ambient music changes it makes are `StartRadioConversation`, which does nothing here. |
 
 ### World systems and support
 
