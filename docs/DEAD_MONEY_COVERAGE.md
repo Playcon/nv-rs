@@ -143,7 +143,7 @@ Quests that hold a system's rules.
 | Chip Reward Quest (`NVDLC01ChipReward`) | none | chips, casino comps, timers | **NOT PLAYED** | Needs the casino comps. |
 | (no name) (`NVDLC01ClinicAutoDocQuest`) | none | a 4 second fade, a sound, controls back on (ordinary Auto-Docs) | **PARTIAL** | Started with `StartQuest` in the clinic: the fade to black with its sound, then the controls back on. The game starts it when an ordinary Auto-Doc is used; the clinic's own Auto-Doc scene (MQ01c) is in the Christine route. |
 | (no name) (`NVDLC01GalaEventQuest`) | none | timers, enabling things, Dean's topic | **NOT PLAYED** | Needs MQ02. |
-| DLC01 Enemy Test (`NVDLC01EnemyTest`) | 10, 11, 20, 21, 22, 30, 31, 32, 50, 51 | teleports, keys, followers, enabling ambush groups | **NOT PLAYED** | [G] Looks like a developer test quest (it moves the player between test spots and enables trappers); not part of the story. |
+| DLC01 Enemy Test (`NVDLC01EnemyTest`) | 10, 11, 20, 21, 22, 30, 31, 32, 50, 51 | teleports, keys, followers, enabling ambush groups | **PARTIAL** | Played with `dead-money-casino.txt` and `FNV Enemy Test`: stages 10, 11, 20, 21, 22, 30, 31, 32 by `SetStage`; the result scripts run (ghosts enabled and disabled, the three recruitments' results, teleports to the escorts' places). A developer's quest; stages 50 and 51 not looked at. |
 | (no name) (`NVDLC01ArcadeGoodbye`) | none | dialogue only [G] | **NOT PLAYED** | No script. [G] Presumably Arcade's farewell line when dismissed on arrival. |
 
 ## Next quests to play

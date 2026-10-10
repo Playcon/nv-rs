@@ -1100,6 +1100,7 @@ Dead Money, the Tampico theatre (MQ03b, `pr/theater-dean`, 2026-10-10): the key,
 Dead Money, the vault and the ending (MQ03, `pr/vault-ending`, 2026-10-10): the stages 20 to 50 by console line, the vault elevator with Elijah dealt with (stage 100), the Mojave gate and the whole ending slideshow to the bunker, played in the viewer from a test character; not played: the terminal, the vault puzzle, the fight with Elijah.
 Dead Money, the companions' bark timers (`pr/bark-timers`, 2026-10-10): Dog's and Dean's timers say their idle lines with voice from the escort characters; Christine's has no Act 2 line.
 Dead Money, the fade timers (`pr/fade-timers`, 2026-10-10): the fade to credits and the Auto-Doc fade run from `StartQuest` in a test character.
+Dead Money, the developer quest `NVDLC01EnemyTest` (`pr/enemy-test`, 2026-10-10): stages 10 to 32 played by SetStage in a test character.
 
 ## Handoff
 
