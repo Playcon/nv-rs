@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 19 PARTIAL, 33 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -124,7 +124,7 @@ Quests that hold a system's rules.
 | Script Functionality for Global Toxic Damage (`NVDLC01GlobalToxicDamage`) | none | the Cloud, timer | **NOT PLAYED** | As above. |
 | Scripting Support for Hologram Features (`NVDLC01HoloSupport`) | none | security holograms, enabling and disabling them | **PARTIAL** | Started by the fountain sequence and ran in the Villa without errors; the holograms as armed enemies were not played. |
 | Hologram Vendor Quest (`NVDLC01HoloVendor`) | none | hologram vending machines, recipe menu, first-use message | **NOT PLAYED** | The recipe menu now exists (crafting branch) and opens with --open-menu; the machine's own activation was not played. |
-| NVDLC01WTSupport (`NVDLC01WTSupport`) | none | terminal use flags, hologram flags, the Gala lockdown | **NOT PLAYED** | Never reached. |
+| NVDLC01WTSupport (`NVDLC01WTSupport`) | none | terminal use flags, hologram flags, the Gala lockdown | **PARTIAL** | Started in West Town with the Dean escort character: the quest script runs and its patrol timer ticks with the patrol variables set; nothing visible. Not played: the Gala01 lockdown, greeter, patrol reactions, the gas trap (they follow from walking the escorts). |
 | (no name) (`NVDLC01Challenges`) | none | challenges (achievement-like counters), alert state | **NOT PLAYED** | Counters exist in nv-rs; none was played through. |
 | NVDLC01CasinoComps (`NVDLC01CasinoComps`) | none | casino winnings level, chips, casino games | **NOT PLAYED** | The casino games (slots, blackjack, roulette) aren't built. |
 | Chip Reward Quest (`NVDLC01ChipReward`) | none | chips, casino comps, timers | **NOT PLAYED** | Needs the casino comps. |
