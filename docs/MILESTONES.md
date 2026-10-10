@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the Gala fireworks quest (`pr/gala-fireworks`, 2026-10-10): the display's timer and the stage 50 results play from the Gala character.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
