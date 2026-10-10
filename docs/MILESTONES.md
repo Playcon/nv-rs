@@ -657,6 +657,8 @@ reaches Elijah's hologram and his dialogue menu. `INFC`: greetings of nine
 Goodsprings NPCs unchanged. **Next action:** trace `RecipeMenu` (`007274b0`)
 and the follower rules so the Dead Money routes run without guesses.
 
+Dead Money, the Gala event (MQ02, `claude/gala-event`, 2026-10-10): stage 50's script, the event's 33 second fireworks timer and the post-Gala enables run in the viewer from a test character at the bell tower; not played: the climb and the panel's own dialogue (a talking activator with no greeting line: how the game offers its topic isn't traced). **Next action:** record in the original game what activating the panel opens, then trace it; then the casino quests (MQ03a to c).
+
 M2 batch (`claude/m2-physics-3`, 2026-10-06): playtest physics fixes.
 Traced and fixed: a loading place's bodies go into Havok asleep
 (`00c674d0`, `00c6b0a0`; Doc Mitchell's clutter, the rail bottle and the
