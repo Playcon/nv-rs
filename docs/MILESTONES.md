@@ -657,6 +657,8 @@ reaches Elijah's hologram and his dialogue menu. `INFC`: greetings of nine
 Goodsprings NPCs unchanged. **Next action:** trace `RecipeMenu` (`007274b0`)
 and the follower rules so the Dead Money routes run without guesses.
 
+Dead Money, Dean's escort (MQ02b, `claude/dean-escort`, 2026-10-10): played in the viewer to stage 40 with the game's own scripts, dialogue and the holograms' terminal items (run as script lines); the ending's result lines complete the quest; no engine change was needed. Not played by hand: the last replies and the terminal screens ([DEAD_MONEY.md](DEAD_MONEY.md), "Act 2"). **Next action:** Christine's escort (MQ02c).
+
 M2 batch (`claude/m2-physics-3`, 2026-10-06): playtest physics fixes.
 Traced and fixed: a loading place's bodies go into Havok asleep
 (`00c674d0`, `00c6b0a0`; Doc Mitchell's clutter, the rail bottle and the
