@@ -1153,6 +1153,33 @@ Played by setting its stages in a test character (`SetStage`), with
 * *Note:* the quest is a developer's test; the original does not run it in a normal game
   [C: whether the original even lets the console set it].
 
+### The radio quests (`NVDLC01RadioDog`, `...RadioDeanQuest`, `...RadioChristine`, `...RadioElijah`, `...RadioSpeakers`, `...RadioCasino`, `...RadioAMBMusic`, `...RadioDeanMusic`)
+
+Played with `dead-money-casino.txt` (the stations are on in it) and the launcher
+`FNV Radio Quests`: each quest is started (`StartQuest`), the companions are put next
+to the player with `MoveTo`, and a probe line (`if (station.GetBroadcastState == 0)`
+then `ShowMessage`) shows each station's state, because the viewer prints no
+variable values.
+
+* *Played (the game's own scripts, nothing guessed):* the Dog, Dean and Christine
+  quests switch their station off while the companion is in the player's cell or within
+  2000 units (or dead), and on again when the companion is out of the cell or 2000 units
+  away: Dean's and Christine's stations went off with them beside the player, and came
+  back (on) when Dean was sent away. **A fact found in the script:** `NVDLC01RadioDogSCRIPT`
+  switches *Dean's* station off when Dog is near (not Dog's own), while Dog's stays on.
+  The probes showed that exactly: Dog beside the player, Dean's station 0, Dog's station
+  still 1.
+* *Started only:* Elijah's, the speakers', Vera's, the ambient and Dean's music quests
+  start and run (`NVDLC01RadioDeanMusic` has no script; Elijah's, the speakers', Vera's and the
+  ambient music's scripts only hold variables); what they are for is the radio
+  conversations their dialogue plays through `StartRadioConversation` and the stations'
+  audio, which nv-rs does not have: `StartRadioConversation` does nothing here and there is
+  no radio playback. This is the blocker (the radio engine), not the quests.
+* *Not played:* any radio line being heard, the stations in the Pip-Boy, and the
+  distance rules with the companion actually walking away.
+* *Guessed [G]:* nothing. [C] In the original, which stations the player hears at
+  the Villa and at the casino and when they stop.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
