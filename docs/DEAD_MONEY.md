@@ -960,6 +960,58 @@ The room's scripts run.
   theater's holograms and Dean's fight, Christine's fight in the suites, the
   collar timer's full course, and every ending of MQ03.
 
+### The executive suites (MQ03c "Last Luxuries")
+
+`characters/dead-money-suites.txt` (the casino character plus the power
+switch's result, MQ03a at stage 10) and `NVDLC01Suites --official --character
+characters/dead-money-suites.txt`. The suites' setup script
+(`NVDLC01SuitesSetupSCRIPT`) moves Christine to her marker, arms and dresses
+her, and locks the elevator, as soon as the cell runs.
+
+* *Played in the viewer (on current main), the way a player meets it:* the
+  intercom's "Find the mute..." line (MQ03c stage 10); the player at
+  Christine's marker; her greeting (stage 10 done, 20 shown: "Find Christine
+  in the Executive Suites" completed); her replies through the topics "put
+  you in the Auto-Doc", "planning to do", "killing you will shut you up"; the
+  last reply's result script (stage 20, `startcombat`, `bCombat` 1, objective
+  "Kill Christine"); her collar rules from the setup script: "proximity
+  detonation" within 768 units (warning message, beeps, rumble, and the
+  player is killed with a medium explosion after 16 seconds of beeping),
+  "Your collar has stopped beeping" once the player is out of range, then
+  "scanning detonation" with her lines "Think you can run?" and "Need to
+  reset this damn thing"; her shotgun fire and the player's death; killing
+  her (console `Kill`): "Christine has died." box, XP +50, "Loose Ends 1/3"
+  (and the bomb collar quest then kills Dean and Dog too: 2/3 and 3/3),
+  objective "Escape the Executive Suites before Christine's collar sets off
+  your own", the intercom's "Your collar's ticking" and the 30 second timer;
+  the elevator unlocking (it shows "locked down by security" while she lives),
+  using it: MQ03c stage 100 ("Quest completed: Last Luxuries"), and leaving
+  for the cell the elevator leads to stops the collar ("Your collar has
+  stopped beeping") and the player lives; staying makes the collar kill the
+  player when the 30 seconds run out.
+* *Rules this relies on, all read from the game's scripts and data (no
+  guesses):* the quest's stages 10 to 100 and the script that ends it
+  (`ForceActiveQuest` to MQ03a or MQ03b, or MQ03 stage 10 when both are done);
+  the setup script's collar rules above; `NVDLC01BombCollarQuest`: the timer
+  runs while the dead follower is in the player's cell and stops once the
+  player is in another cell (`iDiedInCasino`).
+* *How the route is driven:* the character has no console lines for the fight;
+  the launcher gives `--run-at` lines (move to Christine, move away to leave
+  her range, `Kill`, use the elevator, move to its destination door).
+  The player in the viewer has no armor and little health, so the fight itself
+  is decided by the collar and her shotgun and was not won by shooting; the
+  kill is a console line. `--answer-boxes` closes the death box.
+* *Not played:* winning the fight by shooting, the "friendly" Christine
+  (the `nChristineAlly` variable set by the attitude she got in Act 2: no one
+  recruited her in this character), the dialogue branch that talks her down
+  ("Even with the differences in the Villa..." needs Speech 15), the
+  security terminal that turns the holograms on her, the maintenance room, the
+  Starlet code box and the way up from the lobby on foot. Whether the
+  original lets a player with the usual gear win the fight, and the exact
+  timing of the collar's first beeps, are things only the original can say
+  [C].
+* *Guessed [G]:* nothing new.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
