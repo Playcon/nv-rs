@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 21 PARTIAL, 31 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -91,9 +91,9 @@ Dialogue holders and timers for the companions.
 | Dean Dialogue (`NVDLC01DeanDialogue`) | none | dialogue, perk, holograms | **PARTIAL** | The first greeting played for real once the player could sit; later lines untried. |
 | Christine Dialogue (`NVDLC01ChristineDialogue`) | none | dialogue, elevator, vault, collar disarm | **PARTIAL** | The recruit conversation played; the vault and collar-disarm lines belong to Act 3. |
 | Father Elijah Dialogue (`NVDLC01ElijahDialogue`) | none | dialogue, casino barks | **PARTIAL** | The Act 1 and Act 2 greetings and replies played; his casino lines haven't. |
-| (no name) (`NVDLC01DogBarkTimer`) | none | 30 second timer, companion idle lines | **NOT PLAYED** | Never watched. |
-| (no name) (`NVDLC01DeanBarkTimer`) | none | 30 second timer, companion idle lines | **NOT PLAYED** | Never watched. |
-| (no name) (`NVDLC01ChristineBarkTimer`) | none | 30 second timer | **NOT PLAYED** | Never watched. |
+| (no name) (`NVDLC01DogBarkTimer`) | none | 30 second timer, companion idle lines | **PARTIAL** | Played with `dead-money-act2.txt` and the launcher `FNV Dog Barks`: the timer ticks every 30 seconds and Dog says his generic idle lines with his voice. Not played: the other states (not recruited, God in control, at the Gala), not in combat. |
+| (no name) (`NVDLC01DeanBarkTimer`) | none | 30 second timer, companion idle lines | **PARTIAL** | Played with `dead-money-act2-dean.txt` and `FNV Dean Barks`: at the rooftop Dean says "Do not leave me here." with his voice. Not played: his other states. |
+| (no name) (`NVDLC01ChristineBarkTimer`) | none | 30 second timer | **PARTIAL** | Started with the Christine escort character: the timer ticks and asks for her Act 3 idle topic, which has no line in Act 2 ("nothing to say"). Not played: Act 3 (suites). [C] Her idle barks in the original. |
 | (no name) (`NVDLC01ChristineTerminalFX`) | none | vault password terminal, elevator unlock, conversation | **NOT PLAYED** | Act 3; never reached. |
 | (no name) (`NVDLC01NewVegasFollowerFireQuest`) | none | dismissing the player's Mojave companions on arrival | **NOT PLAYED** | The test character has no companions, so it never had anything to do. |
 | (no name) (`NVDLC01StarletDialogue`) | none | hologram dialogue, bark counter | **NOT PLAYED** | Starlet's hologram dialogue; not tried. |

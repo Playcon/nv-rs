@@ -860,6 +860,29 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The companions' bark timers (`NVDLC01DogBarkTimer`, `...DeanBarkTimer`, `...ChristineBarkTimer`)
+
+Played with `dead-money-act2.txt` and `dead-money-act2-dean.txt` (no new character;
+the launchers `FNV Dog Barks` and `FNV Dean Barks`): the companion is put at the
+escort's place (`MoveTo`, as the escort launchers do) and the timer quest is started
+(`StartQuest`).
+
+* *Dog (played):* the timer runs every 30 seconds (the quest's own delay) and
+  picks the line by the companion's state, as its script reads: with Dog hired and
+  following, "generic idle" lines; seen at 9.7, 39.7 and 69.7 seconds with his
+  voice ("Swallowed something bad. Taste like burnt wires.", "Smells like...
+  flesh in plastic...", "Stomach rumbling").
+* *Dean (played):* the same, at the rooftop: "Do not leave me here." with his
+  voice (the Gala-position line).
+* *Christine (partly):* the timer runs and says her generic idle topic, but
+  with her state in the Act 2 characters the topic has no line to say ("Christine
+  has nothing to say about" the topic); her `GenericIdleAct3` lines belong to
+  Act 3 and were not reached. [C] In the original, whether she barks in Act 3
+  after the elevator.
+* *Not played:* the barks while the companion is out of the player's cell, and
+  that they stop in combat (needs a fight).
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):

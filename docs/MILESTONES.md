@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the companions' bark timers (`pr/bark-timers`, 2026-10-10): Dog's and Dean's timers say their idle lines with voice from the escort characters; Christine's has no Act 2 line.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
