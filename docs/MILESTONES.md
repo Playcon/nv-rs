@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, Elijah's lobby intercom and the suites' terminal effects (`pr/elijah-barks`, 2026-10-10): the lobby introduction plays line by line; the vault elevator unlocking plays from `StartQuest`.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
