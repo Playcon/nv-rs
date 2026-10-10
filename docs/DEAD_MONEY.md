@@ -860,6 +860,24 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The developer quest `NVDLC01EnemyTest`
+
+Played by setting its stages in a test character (`SetStage`), with
+`dead-money-casino.txt` and the launcher `FNV Enemy Test` (the stages 10, 11, 20, 21,
+22, 30, 31, 32 in turn).
+
+* *Played in the viewer (on current main):* stage 10 and 11 disable and enable the Villa's
+  starting ghost people (the quest's "Disabling/Enabling initial Villa creatures"); stage
+  20 completes MQ01c, makes Christine join, moves the player to the clinic and enables the
+  ghost people that come after her; stage 21 completes MQ01b (Dean) and enables his ghost
+  people; stage 22 completes MQ01a (Dog, XP, "Assemble Your Crew 3/3", MQ01 complete, MQ02a
+  added), moves the player to the police station and enables its trappers; Elijah's
+  line about speakers and radios plays; stages 30 to 32 move the player to the Gala
+  positions of Christine, Dean and Dog and enable the post-Gala ghosts.
+* *Not played:* stages 50 and 51 (the quest's later steps; not looked at).
+* *Note:* the quest is a developer's test; the original does not run it in a normal game
+  [C: whether the original even lets the console set it].
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
