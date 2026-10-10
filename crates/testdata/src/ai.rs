@@ -75,6 +75,8 @@ pub mod ids {
     pub const WANDER_WIDE: u32 = 0x1148;
     pub const WANDER_TRIGGER: u32 = 0x1149;
     pub const WANDER_IN_CELL: u32 = 0x114A;
+    /// Travel (type 6) to "near the current location" (the person themself).
+    pub const TO_HERE: u32 = 0x114B;
     // Objects (bases).
     pub const CHAIR: u32 = 0x1150;
     /// An activator, bounds 40 × 40 × 40.
@@ -276,6 +278,11 @@ pub fn world(tag: &str) -> TempData {
             sub(b"PLDT", &pldt(0, CHAIR_REF, 0)),
             any_time.clone(),
         ],
+    ));
+    packages.extend(package(
+        TO_HERE,
+        "TestToHere",
+        &[pkdt(6), sub(b"PLDT", &pldt(2, 0, 0)), any_time.clone()],
     ));
     packages.extend(package(
         TO_TRIGGER,

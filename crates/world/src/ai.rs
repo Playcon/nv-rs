@@ -817,6 +817,16 @@ pub fn destination(
     }
     let loc = package.location?;
     let min = min_location_radius(order);
+    // A travel "near the current location": the package's location
+    // reference is the person themself (`0067f2a0`, kind 2 returns the
+    // actor), so they are there already and the travel is over at once.
+    // Only for travel packages: others read the place more than once.
+    if loc.kind == 2 && package.kind == kinds::TRAVEL {
+        let (_, _, position, _) = state.place(order, actor)?;
+        let radius =
+            crate::movement::location_radius(loc.radius, spot_of(order, state, actor), min);
+        return Some((position, radius));
+    }
     let radius_of = |reference: FormId| {
         crate::movement::location_radius(loc.radius, spot_of(order, state, reference), min)
     };

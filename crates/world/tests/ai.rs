@@ -132,6 +132,21 @@ fn travel_radii_follow_what_is_there() {
 }
 
 #[test]
+fn a_travel_near_the_current_location_is_already_there() {
+    let (_data, order) = order("ai-travel-here");
+    let mut state = with_player(&order, [0.0; 3]);
+    let who = FormId(GREETER_REF);
+    state.script_packages.insert(who, FormId(TO_HERE));
+    let p = ai::current_package(&order, &state, who).unwrap();
+    assert_eq!(p.location.map(|l| l.kind), Some(2));
+    // The destination is where the person stands: arrived at once.
+    let (at, radius) = ai::destination(&order, &state, who, &p).unwrap();
+    let (_, _, here, _) = state.place(&order, who).unwrap();
+    assert_eq!(at, here);
+    assert!(world::movement::arrived(here, at, radius));
+}
+
+#[test]
 fn conversations_follow_topics_and_speakers() {
     let (_data, order) = order("ai-conversation");
     let state = with_player(&order, [0.0; 3]);
