@@ -21,3 +21,4 @@ Files hold record names only: no game text, models or other assets.
 | `dead-money-gala.txt` | `NVDLC01EastTownN` | Dead Money Act 2 end: the three escorts done (MQ02 stage 10), at the bell tower's control panel; see `docs/DEAD_MONEY.md` |
 | `dead-money-act2.txt` | `DLC01StartMarker` | Dead Money Act 2 start: the three found (MQ01a to d at stage 100), Elijah's Act 2 greeting said, Dog hired and following (MQ02a begun) |
 | `dead-money-suites.txt` | `NVDLC01Suites` | Dead Money Act 3: the casino character with the power switch done (MQ03a stage 10), in the executive suites with a hostile Christine (MQ03c); see `docs/DEAD_MONEY.md` |
+| `dead-money-theater.txt` | `NVDLC01Theater` | Dead Money Act 3: the casino character with the power switch done (MQ03a stage 10), in the Tampico theatre (MQ03b); see `docs/DEAD_MONEY.md` |
