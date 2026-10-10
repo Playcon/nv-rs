@@ -923,11 +923,18 @@ fn read(facts: &Facts, name: &str, on: Option<FormId>, args: &[Value]) -> Option
         // carried out.
         "IsAnimPlaying" => {
             let r = on?;
-            // A person's animation data aren't carried out: one who is down
-            // isn't animating, one on their feet is (their idle). [G] Not
-            // traced, so only with `crate::guesses` on; else the script
-            // stops as before.
             if actor(r) {
+                // A person with no 3D loaded has no animation data (vtable
+                // +0x1e4 gives none) and the handler's other path finds no
+                // model either: the result stays 0 (`005c14a0`).
+                if !s.more.loaded.contains(&r) {
+                    return Some(flag(false));
+                }
+                // With animation data the handler reads its eight sequence
+                // slots (`00491040`), which aren't carried out: one who is
+                // down isn't animating, one on their feet is (their idle).
+                // [G] Not traced, so only with `crate::guesses` on; else
+                // the script stops as before.
                 return match arg(0) {
                     _ if !crate::guesses::enabled() => None,
                     Value::Text(_) => None,

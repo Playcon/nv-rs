@@ -39,6 +39,7 @@ fn with_guesses_on_teammates_follow_and_people_on_their_feet_animate() {
     state.teammates.remove(&who);
 
     // A person on their feet is playing an animation; one who is down isn't.
+    world::more_functions::report_loaded(&mut state, [who].into_iter().collect());
     assert_eq!(
         ask(&order, &scripts, &mut state, "PersonRef.IsAnimPlaying"),
         1.0

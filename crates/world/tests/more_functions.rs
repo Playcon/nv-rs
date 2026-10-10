@@ -967,12 +967,15 @@ fn objects_animations_playing() {
     assert_eq!(q(&mut state, "RadioRef.IsAnimPlaying forward"), 1.0);
     assert_eq!(q(&mut state, "RadioRef.IsAnimPlaying Backward"), 0.0);
     assert_eq!(q(&mut state, "CrateRef.IsAnimPlaying"), 0.0);
-    // People's animation data isn't carried out: asked about a group the
-    // script stops; asked about any, a person on their feet is playing
-    // their idle (one who is down isn't: `essential_people_go_down…`).
+    // A person with no 3D loaded has no animation data: 0 (`005c14a0`).
+    assert_eq!(q(&mut state, "PersonRef.IsAnimPlaying Forward"), 0.0);
+    assert_eq!(q(&mut state, "PersonRef.IsAnimPlaying"), 0.0);
+    // Loaded, their eight animation slots aren't carried out: asked about
+    // a group the script stops; asked about any, untraced, only with
+    // `world::guesses` on (`contrib_guesses.rs`: one on their feet is
+    // playing their idle, one who is down isn't); off, the script stops.
+    more::report_loaded(&mut state, [FormId(PERSON_REF)].into_iter().collect());
     assert_eq!(q(&mut state, "PersonRef.IsAnimPlaying Forward"), STOPPED);
-    // Asked about any: untraced, only with `world::guesses` on
-    // (`contrib_guesses.rs`); off, the script stops.
     assert_eq!(q(&mut state, "PersonRef.IsAnimPlaying"), STOPPED);
     // The viewer stops reporting a one-shot group once it has ended
     // (`preview::cell::sequence_playing`): it reads 0 from then on.
