@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the West Town support quest (`pr/wt-support`, 2026-10-10): the quest runs and its patrol timer ticks in West Town; the lockdown is not reached.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,

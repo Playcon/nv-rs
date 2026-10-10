@@ -860,6 +860,19 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The West Town support quest (`NVDLC01WTSupport`)
+
+Started in West Town with `dead-money-act2-dean.txt` (the Dean escort's cell) and the launcher
+`FNV WT Support`.
+
+* *Played:* the quest runs from the start of the game (its start-game flag). With the first patrol
+  variables set (`iPatrolA` and `iTimerA`), the quest script's `GameMode` runs its 10 second
+  patrol timer; nothing is printed (the patrol people are not in the player's view).
+* *Not played:* the lockdown at the first Gala gate (`bGala01LockDown`), the greeter, the
+  patrol people reacting, the holograms and the gas trap; they belong to the Gala route's
+  triggers that the escorts reach by walking.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
