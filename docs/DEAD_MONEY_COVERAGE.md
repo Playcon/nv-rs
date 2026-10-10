@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 20 PARTIAL, 32 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -66,7 +66,7 @@ Scripted quests that carry the player between the bunker, the Villa and the cred
 | (no name) (`NVDLC01VillaTransitionTimer`) | none | fade to black, move to the Villa, music, sound | **PLAYED** | Played in the bunker launch: it moves the player to the Villa. |
 | (no name) (`NVDLC01FountainStartSequence`) | 10, 20 | script packages on the hologram, fade in, controls back on, hologram dialogue | **PLAYED** | Played: the wake-up and Elijah's hologram starting to talk (the maintainer watched the replies appear). |
 | (no name) (`NVDLC01BunkerTransitionTimer`) | none | fade, move to the bunker, music, radio station for Elijah | **NOT PLAYED** | Belongs to the ending, never reached. |
-| (no name) (`NVDLC01FadeToCreditsTimer`) | none | fade, kill actor, autosave, music | **NOT PLAYED** | Belongs to the ending, never reached. |
+| (no name) (`NVDLC01FadeToCreditsTimer`) | none | fade, kill actor, autosave, music | **PARTIAL** | Started with `StartQuest` in the vault character: the stinger, the permanent fade to black and the player's death (the reload of the last autosave is not built). Not played: reached from the ending's "failure" slide. |
 | (no name) (`NVDLC01Ending`) | none | slideshow of endings [G] | **NOT PLAYED** | Never reached. [G] What it plays isn't known beyond its name. |
 
 ### Elijah's voice
@@ -128,7 +128,7 @@ Quests that hold a system's rules.
 | (no name) (`NVDLC01Challenges`) | none | challenges (achievement-like counters), alert state | **NOT PLAYED** | Counters exist in nv-rs; none was played through. |
 | NVDLC01CasinoComps (`NVDLC01CasinoComps`) | none | casino winnings level, chips, casino games | **NOT PLAYED** | The casino games (slots, blackjack, roulette) aren't built. |
 | Chip Reward Quest (`NVDLC01ChipReward`) | none | chips, casino comps, timers | **NOT PLAYED** | Needs the casino comps. |
-| (no name) (`NVDLC01ClinicAutoDocQuest`) | none | a 4 second fade, a sound, controls back on (ordinary Auto-Docs) | **NOT PLAYED** | The short fade and sound after a cure at an ordinary Auto-Doc in the clinic; not played. Christine's pod has its own script, which was played (see MQ01c). |
+| (no name) (`NVDLC01ClinicAutoDocQuest`) | none | a 4 second fade, a sound, controls back on (ordinary Auto-Docs) | **PARTIAL** | Started with `StartQuest` in the clinic: the fade to black with its sound, then the controls back on. The game starts it when an ordinary Auto-Doc is used; the clinic's own Auto-Doc scene (MQ01c) is in the Christine route. |
 | (no name) (`NVDLC01GalaEventQuest`) | none | timers, enabling things, Dean's topic | **NOT PLAYED** | Needs MQ02. |
 | DLC01 Enemy Test (`NVDLC01EnemyTest`) | 10, 11, 20, 21, 22, 30, 31, 32, 50, 51 | teleports, keys, followers, enabling ambush groups | **NOT PLAYED** | [G] Looks like a developer test quest (it moves the player between test spots and enables trappers); not part of the story. |
 | (no name) (`NVDLC01ArcadeGoodbye`) | none | dialogue only [G] | **NOT PLAYED** | No script. [G] Presumably Arcade's farewell line when dismissed on arrival. |
