@@ -1,0 +1,59 @@
+; Dead Money, Act 3, the executive suites: Christine is hostile (MQ03c "Last Luxuries").
+; Start with:  nv-viewer <Data> NVDLC01Suites --official --character characters/dead-money-suites.txt
+; The casino character (dead-money-casino.txt) plus the power switch's result:
+; MQ03a at stage 10, which starts MQ03b and MQ03c. The suites' own setup script
+; then moves Christine to her marker, arms her and locks the elevator. Not played
+; to get here: the kitchen, the key and the walk up from the lobby.
+
+level 20
+
+RNVTARef.Enable
+
+set VDLCPackQuest.bClassicItemsGiven to 1
+set VDLCPackQuest.bCaravanItemsGiven to 1
+set VDLCPackQuest.bMercenaryItemsGiven to 1
+set VDLCPackQuest.bTribalItemsGiven to 1
+
+player.AddItem ArmorLeather 1
+player.EquipItem ArmorLeather
+player.AddItem WeapNV9mmPistol 1
+player.EquipItem WeapNV9mmPistol
+player.AddItem Ammo9mm 120
+player.AddItem WeapNVHuntingShotgun 1
+player.AddItem Ammo20Ga 40
+player.AddItem Stimpak 10
+player.AddItem RadAway 2
+player.AddItem Caps001 1500
+
+set NVDLC03MQ00.nEnableDLC to 2
+SetStage NVDLC03MQ00 10
+NVDLC03RadioREF.Enable
+set NVDLC02MQ00.nEnableDLC to 2
+SetStage NVDLC02MQ00 10
+NVDLC02JedRadioTAREF.Enable
+StartQuest NVDLC02RadioMessage
+set NVDLC04MQ00.nEnableDLC to 2
+SetStage NVDLC04MQ00 10
+set NVDLC05MQ00.nEnableDLC to 2
+
+SetStage NVDLC01MQ00 10
+set NVDLC01MQ00.bTeleportOut to 1
+set NVDLC01MQ00.DoOnceMessage to -1
+
+SetObjectiveCompleted NVDLC01MQ00 10 1
+SetStage NVDLC01MQ00 100
+StartQuest NVDLC01NewVegasFollowerFireQuest
+player.RemoveAllItems NVDLC01PlayerEquipmentContainerRef
+
+SetInCharGen 0
+
+SetStage NVDLC01MQ02 100
+SetStage NVDLC01MQ03a 5
+ForceActiveQuest NVDLC01MQ03a
+NVDLC01RadioStationElijahREF.SetBroadcastState 1
+NVDLC01RadioStationDogREF.SetBroadcastState 1
+NVDLC01RadioStationDeanREF.SetBroadcastState 1
+NVDLC01RadioStationChristineREF.SetBroadcastState 1
+NVDLC01DeanRef.MoveTo NVDLC01DeanTheaterScaffMarker
+
+SetStage NVDLC01MQ03a 10
