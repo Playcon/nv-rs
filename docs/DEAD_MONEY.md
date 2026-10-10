@@ -860,6 +860,20 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The fade timers (`NVDLC01FadeToCreditsTimer`, `NVDLC01ClinicAutoDocQuest`)
+
+Played by starting the quests in a test character (`StartQuest`), with
+`dead-money-vault.txt` and `dead-money-villa.txt` and the launcher `FNV Fade Timers`.
+
+* *`NVDLC01FadeToCreditsTimer` (played):* the end-transition stinger plays, the screen
+  fades to black permanently, then (7.8 seconds) the quest's script turns out the slideshow
+  light and kills the player ("You died": the original reloads the last autosave; this
+  viewer has no main menu).
+* *`NVDLC01ClinicAutoDocQuest` (played):* the 4 second fade to black with the Auto-Doc sound,
+  then the controls come back on (`EnablePlayerControls`) and the quest stops.
+* *Not played:* what the credits look like (not built), and what loads after the kill.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
