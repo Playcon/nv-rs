@@ -750,10 +750,11 @@ destinations, and Act 2 itself.
   The 12 s and the quarter are guesses: how the game decides isn't traced
   (`world::combat::hurt`, `advance_down`). In a Villa fight a ghost goes
   down, gets up, and ghosts attack the player.
-- **Followers follow.** A teammate with nothing else to do (no package, or a
-  sandbox, wander, guard, patrol or find one) keeps within 200 units of the
-  player (a guess, `world::ai::TEAMMATE_DISTANCE`); Dead Money's own
-  follow packages still win. Teammates come along when the player moves to
+- **Followers follow.** Companions follow and wait by their own packages
+  (Dead Money's `NVDLC01FollowersDogFollowPlayerDEFAULT` and `...WAIT`, a
+  guard package true while `Waiting` is 1); an earlier guessed fallback
+  that kept a teammate with no package 200 units from the player was
+  removed, since the data covers them. Teammates come along when the player moves to
   another place (now the traced `world::companions::come_along`, which
   replaced the guessed `bring_teammates`).
 - **The intermittent native crash.** It was the graphics running out: every

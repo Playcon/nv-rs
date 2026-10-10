@@ -75,6 +75,8 @@ pub mod ids {
     pub const WANDER_WIDE: u32 = 0x1148;
     pub const WANDER_TRIGGER: u32 = 0x1149;
     pub const WANDER_IN_CELL: u32 = 0x114A;
+    /// Follow (type 1) the player, 350 units.
+    pub const FOLLOW_PLAYER: u32 = 0x114C;
     // Objects (bases).
     pub const CHAIR: u32 = 0x1150;
     /// An activator, bounds 40 × 40 × 40.
@@ -276,6 +278,11 @@ pub fn world(tag: &str) -> TempData {
             sub(b"PLDT", &pldt(0, CHAIR_REF, 0)),
             any_time.clone(),
         ],
+    ));
+    packages.extend(package(
+        FOLLOW_PLAYER,
+        "TestFollowPlayer",
+        &[pkdt(1), any_time.clone(), ptdt(PLAYER_REF, 350)],
     ));
     packages.extend(package(
         TO_TRIGGER,

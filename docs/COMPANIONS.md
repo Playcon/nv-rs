@@ -512,10 +512,10 @@ view` outside, standing on the player's spot).
   BuildFollowerListRecursive`).
 - The Back Up package itself (the AI's), the follower barks and the
   hints.
-- With `NV_GUESSES=1`, a teammate with nothing to do still follows by the
-  guessed package (`world::ai::teammate_follows`, Dead Money
-  contributor's); the traced rules here move people only when the player
-  is put somewhere, not while walking.
+- A teammate follows and waits only by the packages the data gives it
+  (the earlier guessed fallback for a teammate with none was removed);
+  the traced rules here move people only when the player is put
+  somewhere, not while walking.
 - (Done since: `DropMe` — the companions' faction-outfit scripts drop what
   they're given, `OnAdd CraigBooneREF` … `DropMe`; see
   `docs/ITEM_SCRIPTS.md`.)

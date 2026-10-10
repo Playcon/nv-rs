@@ -132,6 +132,25 @@ fn travel_radii_follow_what_is_there() {
 }
 
 #[test]
+fn a_teammate_follows_by_its_own_package_and_gets_none_invented() {
+    let (_data, order) = order("ai-teammate");
+    let mut state = with_player(&order, [0.0; 3]);
+    let who = FormId(GREETER_REF);
+    state.teammates.insert(who);
+    // With no package of its own a teammate has none: nothing is made up
+    // for it (it used to be a guessed follow at 200 units).
+    state.script_packages.remove(&who);
+    let none = ai::current_package(&order, &state, who);
+    assert!(none.as_ref().is_none_or(|p| p.form_id != FormId(0)));
+    // With a Follow package its data gives the distance (the companions'
+    // own `...FollowPlayer` packages).
+    state.script_packages.insert(who, FormId(FOLLOW_PLAYER));
+    let p = ai::current_package(&order, &state, who).unwrap();
+    assert_eq!(p.kind, ai::kinds::FOLLOW);
+    assert_eq!(ai::followed(&p), Some((world::dialogue::PLAYER_REF, 350.0)));
+}
+
+#[test]
 fn conversations_follow_topics_and_speakers() {
     let (_data, order) = order("ai-conversation");
     let state = with_player(&order, [0.0; 3]);
