@@ -1106,6 +1106,7 @@ Dead Money, Elijah's lobby intercom and the suites' terminal effects (`pr/elijah
 Dead Money, dismissing the Mojave companions (`pr/follower-fire`, 2026-10-10): Boone's and Arcade's dismissals play from the casino character.
 Dead Money, the toxic cloud (`pr/toxic-quests`, 2026-10-10): the cloud's damage plays to the player's death; the global damage is blocked by the missing Hardcore setting.
 Dead Money, the casino's support quests (`pr/casino-support`, 2026-10-10): the chip reward, the hologram vending machine and the challenge counters play; the comps are blocked by the casino games.
+Dead Money, the West Town support quest (`pr/wt-support`, 2026-10-10): the quest runs and its patrol timer ticks in West Town; the lockdown is not reached.
 
 ## Handoff
 
