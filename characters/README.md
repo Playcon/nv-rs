@@ -17,3 +17,4 @@ Files hold record names only: no game text, models or other assets.
 | `dead-money-villa.txt` | `DLC01StartMarker` | Dead Money after the intro: the D2 character gassed, gear taken, arriving at the Villa fountain (its wake-up runs) |
 | `dead-money-casino.txt` | `NVDLC01Casino` | Dead Money Act 3 start: the Villa character with MQ02 finished and `NVDLC01MQ03a` begun, as the Lobby's knockout script leaves it |
 | `dead-money-act2.txt` | `DLC01StartMarker` | Dead Money Act 2 start: the three found (MQ01a to d at stage 100), Elijah's Act 2 greeting said, Dog hired and following (MQ02a begun) |
+| `dead-money-vault.txt` | `NVDLC01Vault` | Dead Money Act 3 finale: the three casino quests done, MQ03 at stage 10, in the vault; see `docs/DEAD_MONEY.md` |
