@@ -825,9 +825,31 @@ Elijah's greeting said, Dog hired by the game's own hire script).
   conversation picks from that list isn't traced). The `nvinspect dialogue`
   listing of Dog and Sunny Smiles is unchanged by it.
 
-Not played yet: Dean's rooftop (the holograms, the switches), Christine's
-switching station (the electrical box, the elevator, the remote terminal),
-and the Gala Event itself (MQ02).
+**Dean (MQ02b "Strike Up the Band").** `characters/dead-money-act2-dean.txt`
+(Act 1 done, Elijah's greeting said, Dean hired by the game's hire script);
+launch `NVDLC01WestTownS --official --at 2758,-3171,1640,0 --character
+characters\dead-money-act2-dean.txt --run "NVDLC01DeanREF.MoveTo 0200AE2A"`
+(the form ID's first digits are the load index of Dead Money).
+* *Played in the viewer (on current main, no code change needed):* the
+  rooftop trigger completes "Get Dean to the Puesta del Sol South rooftop"
+  and shows the next objective, Dean walks up and talks, and the replies
+  work (picked with `--say`, which prints the topics offered): the Gala
+  talk, "I need you to stay here and fire off the Gala Event", "If I clear
+  out all the Ghost People...", then "Let me hunt around...", which sets
+  stage 30 and shows "Turn on both Security Holograms". The two hologram
+  terminals' items (run as their script lines) switch the holograms on, the
+  holograms fight the ghost people (a ghost was killed by one) and stage 40
+  shows "Let Dean know it's safe". The ending reply's result lines (his
+  attitude, in position, fire him, stage 100) run and the quest completes
+  with the MQ02a objective carried on ("Return to Dog...").
+* *Not played:* picking the last replies by hand (Dean's greeting needs his
+  Act 1 chair conversation's variables, which the test character doesn't
+  set, so a second conversation opens with "Have a seat"), the terminal
+  screens, and the holograms' routes against the ghosts beyond one kill.
+* *Guessed [G]:* nothing new; the dialogue conditions are the game's.
+
+Not played yet: Christine's switching station (the electrical box, the
+elevator, the remote terminal), and the Gala Event itself (MQ02).
 
 ### The casino (MQ03)
 
