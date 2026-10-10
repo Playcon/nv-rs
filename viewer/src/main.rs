@@ -838,7 +838,11 @@ fn main() {
         // hold still in menu mode.
         .add_systems(
             Update,
-            move_pieces.in_set(frame_order::AiSet::Call(frame_order::RUN_ANIMATIONS)),
+            (
+                move_pieces,
+                doors::follow_scripted_animation.after(move_pieces),
+            )
+                .in_set(frame_order::AiSet::Call(frame_order::RUN_ANIMATIONS)),
         )
         // The movement (`ProcessLists::UpdateActorsMovement`, `0096db30`, a
         // lead): people walk their paths, use furniture, greet and talk
@@ -3166,6 +3170,7 @@ fn spawn_scene(
     // play (the state's `GetOpenState` needs it).
     swing_doors.read_settings(&game.0.settings);
     swing_doors.replace(scene.swing_doors.iter(), &mut state.0);
+    swing_doors.replace_animated(scene.animated_collision.iter());
     for entity in &old {
         spawner.commands.entity(entity).despawn();
     }

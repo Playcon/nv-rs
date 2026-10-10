@@ -86,6 +86,7 @@ enum Square {
         object_bounds: Vec<cellview::ObjectBounds>,
         doors: Vec<DoorData>,
         swing_doors: Vec<cellview::SwingDoor>,
+        animated_collision: Vec<cellview::SwingDoor>,
         talkers: Vec<crate::dialogue::Talker>,
         /// People it left out as disabled when it loaded
         /// (`world::ai::disabled_people_in_square`), who come in once a
@@ -397,6 +398,7 @@ pub fn stream_squares(
                     collision: Box::new(scene.collision),
                     doors: scene.doors,
                     swing_doors: scene.swing_doors,
+                    animated_collision: scene.animated_collision,
                     disabled_people,
                 }
             }
@@ -481,6 +483,7 @@ pub fn stream_squares(
         let mut doors = Vec::new();
         let mut talkers = Vec::new();
         let mut swing = Vec::new();
+        let mut animated = Vec::new();
         let mut object_bounds = crate::scripts::ObjectBounds::default();
         for state in exterior.squares.values() {
             if let Square::Loaded {
@@ -488,12 +491,14 @@ pub fn stream_squares(
                 object_bounds: bounds,
                 doors: d,
                 swing_doors: s,
+                animated_collision: a,
                 talkers: t,
                 ..
             } = state
             {
                 collision.extend(c);
                 doors.extend(d.iter().cloned());
+                animated.extend(a.iter().cloned());
                 swing.extend(s.iter());
                 talkers.extend(t.iter().copied());
                 object_bounds
@@ -523,6 +528,7 @@ pub fn stream_squares(
         // their doors have them once the collider is in place).
         swing_doors.read_settings(&game.0.settings);
         swing_doors.replace(swing.into_iter(), &mut state.0);
+        swing_doors.replace_animated(animated.iter());
         // Every square takes the loaded lights that reach it, its
         // neighbours' too.
         let all: Vec<cellview::LightData> = exterior

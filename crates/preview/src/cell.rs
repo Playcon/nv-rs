@@ -1630,6 +1630,48 @@ impl SwingDoor {
 }
 
 impl CellScene {
+    /// The cell's placed objects, not doors, whose models have sequences
+    /// and keyframed collision (an Auto-Doc pod's door): what moves their
+    /// collision when a script plays a sequence (`PlayGroup`). Their leaves
+    /// are owned in [`Self::collider`] like a door's.
+    pub fn animated_collision(&self, convention: RotationConvention) -> Vec<SwingDoor> {
+        let mut out = Vec::new();
+        for instance in &self.instances {
+            let object = &self.cell.objects[instance.object];
+            let model = &self.models[instance.model];
+            if object.base_type == esm::FourCC::new(b"DOOR")
+                || instance.part.is_some()
+                || model.sequences.is_empty()
+                || simulated_body(object, model).is_some()
+            {
+                continue;
+            }
+            let leaves: Vec<Vec<(String, Transform)>> = model
+                .collision
+                .iter()
+                .filter(|p| p.keyframed && nif::collision::layers::blocks_walking(p.layer))
+                .map(|p| p.nodes.clone())
+                .collect();
+            if leaves.is_empty() {
+                continue;
+            }
+            out.push(SwingDoor {
+                reference: object.form_id,
+                base: object.base,
+                name: object
+                    .base_editor_id
+                    .clone()
+                    .unwrap_or_else(|| object.base.to_string()),
+                open_by_default: false,
+                place: self.transform(instance, convention),
+                sequences: model.sequences.clone(),
+                leaves,
+                boxes: Vec::new(),
+            });
+        }
+        out
+    }
+
     /// The cell's doors that open where they stand, with what moves them.
     pub fn swing_doors(&self, convention: RotationConvention) -> Vec<SwingDoor> {
         let mut out = Vec::new();
@@ -2035,6 +2077,13 @@ impl CellScene {
             let moving = (!door && instance.part.is_none())
                 .then(|| simulated_body(object, model))
                 .flatten();
+            // An object a script can animate (its model has sequences)
+            // owns its keyframed parts too, like a door's leaf
+            // ([`Self::animated_collision`]).
+            let animated = object.base_type != esm::FourCC::new(b"DOOR")
+                && instance.part.is_none()
+                && moving.is_none()
+                && !model.sequences.is_empty();
             for part in &model.collision {
                 if !nif::collision::layers::blocks_walking(part.layer) {
                     continue;
@@ -2042,7 +2091,7 @@ impl CellScene {
                 if moving.is_some_and(|b| moving_part(part) && part.body.block == b) {
                     continue;
                 }
-                let owner = if door && part.keyframed {
+                let owner = if (door || animated) && part.keyframed {
                     object.form_id.0
                 } else {
                     0

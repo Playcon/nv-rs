@@ -41,6 +41,12 @@ pub struct SwingDoors {
     /// `[General] bAnimateDoorPhysics` (0 in `Fallout_default.ini`): the
     /// leaf's collision follows the swing frame by frame.
     pub animate_physics: bool,
+    /// Other objects whose collision a script's sequence moves (see
+    /// [`follow_scripted_animation`]), by placed reference.
+    pub animated: HashMap<u32, SwingDoor>,
+    /// The pose of each one's collision last applied: the sequence and the
+    /// frame (thirtieths of a second).
+    animated_applied: HashMap<u32, (String, u32)>,
 }
 
 /// Where each door's leaf is this frame: whether its `Open` (true) or
@@ -66,6 +72,16 @@ impl SwingDoors {
             self.doors.insert(door.reference.0, door.clone());
         }
         self.dirty = true;
+    }
+
+    /// Takes the objects here whose collision scripts animate
+    /// (`CellScene::animated_collision`).
+    pub fn replace_animated<'a>(&mut self, objects: impl Iterator<Item = &'a SwingDoor>) {
+        self.animated.clear();
+        self.animated_applied.clear();
+        for object in objects {
+            self.animated.insert(object.reference.0, object.clone());
+        }
     }
 
     /// Reads the INI setting the physics follow.
@@ -173,6 +189,50 @@ pub fn update_doors(
         }
     }
     poses.0 = new_poses;
+}
+
+/// A script's `PlayGroup` on an object with keyframed collision (an
+/// Auto-Doc pod's door): the collision follows the sequence the model
+/// shows, and holds its last pose when a one-shot has ended. [G]: how the
+/// game moves the bodies of a script-animated object isn't traced; a door
+/// is placed when its sequence ends (`0047ab40`).
+pub fn follow_scripted_animation(
+    time: Res<Time>,
+    groups: Res<crate::PlayingGroups>,
+    mut doors: ResMut<SwingDoors>,
+    mut collision: ResMut<CellCollision>,
+) {
+    if doors.animated.is_empty() {
+        return;
+    }
+    let rebuilt = collision.is_changed();
+    let doors = &mut *doors;
+    if rebuilt {
+        doors.animated_applied.clear();
+    }
+    let now = time.elapsed_secs();
+    for (reference, object) in &doors.animated {
+        let Some((name, since)) = groups.0.get(reference) else {
+            continue;
+        };
+        let Some(sequence) = object
+            .sequences
+            .iter()
+            .find(|s| s.name.eq_ignore_ascii_case(name))
+        else {
+            continue;
+        };
+        let length = (sequence.stop - sequence.start).max(0.0);
+        let seconds = (now - since).clamp(0.0, length);
+        let key = (name.to_ascii_lowercase(), (seconds * 30.0) as u32);
+        if doors.animated_applied.get(reference) == Some(&key) {
+            continue;
+        }
+        if let Some((rotation, translation)) = object.leaf_move(Some((sequence, seconds))) {
+            collision.0.move_owner(*reference, &rotation, translation);
+        }
+        doors.animated_applied.insert(*reference, key);
+    }
 }
 
 /// The sound a `sound:` text key names (`004eef00`: the word after

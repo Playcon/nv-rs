@@ -269,6 +269,110 @@ fn doors_that_open_own_their_leaves_and_swing_them() {
 }
 
 #[test]
+fn an_object_a_script_animates_owns_its_keyframed_collision() {
+    // An activator's model (a pod): a fixed body and a keyframed door part
+    // on a "Leaf" node hinged at x = 50, which the sequence "Forward" turns
+    // a quarter turn over a second. Not a DOOR record: no open state, but
+    // the leaf is the object's own to move.
+    let hinge = Transform {
+        translation: [50.0, 0.0, 0.0],
+        ..Transform::IDENTITY
+    };
+    let leaf_part = CollisionPart {
+        layer: 2,
+        dynamic: false,
+        keyframed: true,
+        node: 0,
+        nodes: vec![
+            ("Pod".to_string(), Transform::IDENTITY),
+            ("Leaf".to_string(), hinge),
+        ],
+        flags: 0,
+        shell: 0.0,
+        material: 0,
+        body: Default::default(),
+        shape: box_shape(
+            [5.0, 5.0, 100.0],
+            &Transform {
+                translation: [0.0, 0.0, 100.0],
+                ..Transform::IDENTITY
+            },
+        ),
+    };
+    let quarter = |t: f32| {
+        let (s, c) = (t * std::f32::consts::FRAC_PI_4).sin_cos();
+        [c, 0.0, 0.0, s]
+    };
+    let forward = nif::Sequence {
+        name: "Forward".into(),
+        start: 0.0,
+        stop: 1.0,
+        looping: false,
+        tracks: vec![nif::Track {
+            node: "Leaf".into(),
+            motion: nif::Motion::Keys {
+                translation: Vec::new(),
+                rotation: vec![(0.0, quarter(0.0)), (1.0, quarter(1.0))],
+                scale: Vec::new(),
+                default: (None, None, None),
+                euler: None,
+            },
+            priority: 0,
+        }],
+        accum_root: None,
+        materials: Vec::new(),
+        text_keys: Vec::new(),
+    };
+    let model = |sequences: Vec<nif::Sequence>| Model {
+        path: "meshes/test/pod.nif".into(),
+        meshes: Vec::new(),
+        collision: vec![leaf_part.clone()],
+        root_transform: None,
+        skeleton: None,
+        sequences: std::sync::Arc::new(sequences),
+        particles: None,
+        bsx_flags: 0,
+    };
+    let pod = placement(0x910, 0x831, b"ACTI", [0.0, 0.0, 0.0], 0.0);
+    let scene = scene(
+        vec![pod.clone()],
+        Vec::new(),
+        vec![model(vec![forward.clone()])],
+    );
+    let mut c = scene.collider(RotationConvention::DEFAULT);
+    let across = |c: &physics::Collider| {
+        c.raycast([0.0, -50.0, 100.0], [0.0, 1.0, 0.0], 100.0)
+            .is_some()
+    };
+    assert!(across(&c), "the leaf is closed across the way");
+    assert!(c.owns(0x910));
+    let animated = scene.animated_collision(RotationConvention::DEFAULT);
+    assert_eq!(animated.len(), 1);
+    assert_eq!(animated[0].reference, FormId(0x910));
+    // The script's "Forward" at its end turns the leaf out of the way.
+    let (sequence, at) = animated[0]
+        .sequences
+        .iter()
+        .find(|s| s.name.eq_ignore_ascii_case("forward"))
+        .map(|s| (s, 1.0))
+        .unwrap();
+    let (rotation, translation) = animated[0].leaf_move(Some((sequence, at))).unwrap();
+    c.move_owner(0x910, &rotation, translation);
+    assert!(!across(&c), "the leaf has swung away");
+    // A model with no sequences, or with none of its collision keyframed,
+    // is not an animated object: its collision stays unowned.
+    let still = scene_of_one(&pod, model(Vec::new()));
+    assert!(still
+        .animated_collision(RotationConvention::DEFAULT)
+        .is_empty());
+    assert!(!still.collider(RotationConvention::DEFAULT).owns(0x910));
+}
+
+fn scene_of_one(pod: &Placement, model: Model) -> CellScene {
+    scene(vec![pod.clone()], Vec::new(), vec![model])
+}
+
+#[test]
 fn a_placed_scale_scales_the_collision() {
     // The game clones a scaled reference's bodies scaled (`00c8f2a0`).
     let model = Model {
