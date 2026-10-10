@@ -6,7 +6,7 @@ earlier Dead Money work recorded (`docs/DEAD_MONEY.md` on the Dead Money branche
 changes. Names and behaviour are described in my own words; no game text is quoted, and nothing
 decompiled is included.
 
-**57 quests**: 4 PLAYED, 18 PARTIAL, 34 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 22 PARTIAL, 30 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -123,11 +123,11 @@ Quests that hold a system's rules.
 | Script Functionality for Toxic Clouds (`NVDLC01ToxicCloud`) | none | the Cloud, damage over time, vision effect, companion warnings | **NOT PLAYED** | Never examined in the viewer. The functions it calls are carried out; whether the damage and effect look right isn't checked. |
 | Script Functionality for Global Toxic Damage (`NVDLC01GlobalToxicDamage`) | none | the Cloud, timer | **NOT PLAYED** | As above. |
 | Scripting Support for Hologram Features (`NVDLC01HoloSupport`) | none | security holograms, enabling and disabling them | **PARTIAL** | Started by the fountain sequence and ran in the Villa without errors; the holograms as armed enemies were not played. |
-| Hologram Vendor Quest (`NVDLC01HoloVendor`) | none | hologram vending machines, recipe menu, first-use message | **NOT PLAYED** | The recipe menu now exists (crafting branch) and opens with --open-menu; the machine's own activation was not played. |
+| Hologram Vendor Quest (`NVDLC01HoloVendor`) | none | hologram vending machines, recipe menu, first-use message | **PARTIAL** | Played from `dead-money-theater.txt`: the Tampico's hologram vending machine shows its first-use box and sets the flag. Not played: the recipes. |
 | NVDLC01WTSupport (`NVDLC01WTSupport`) | none | terminal use flags, hologram flags, the Gala lockdown | **NOT PLAYED** | Never reached. |
-| (no name) (`NVDLC01Challenges`) | none | challenges (achievement-like counters), alert state | **NOT PLAYED** | Counters exist in nv-rs; none was played through. |
-| NVDLC01CasinoComps (`NVDLC01CasinoComps`) | none | casino winnings level, chips, casino games | **NOT PLAYED** | The casino games (slots, blackjack, roulette) aren't built. |
-| Chip Reward Quest (`NVDLC01ChipReward`) | none | chips, casino comps, timers | **NOT PLAYED** | Needs the casino comps. |
+| (no name) (`NVDLC01Challenges`) | none | challenges (achievement-like counters), alert state | **PARTIAL** | The challenge counters its DLC scripts call were seen in the routes (Loose Ends, Assemble Your Crew, Having a Ball, Safety Deposit Box). Not played: the quest's own Authority Issues and History's Sake counters. |
+| NVDLC01CasinoComps (`NVDLC01CasinoComps`) | none | casino winnings level, chips, casino games | **PARTIAL** | Started in the vault character: it runs; the winnings level stays 0 because the casino games (Chazm's) record none, so no comp is given. Blocked by the games. |
+| Chip Reward Quest (`NVDLC01ChipReward`) | none | chips, casino comps, timers | **PARTIAL** | Played from `dead-money-vault.txt` (`FNV Casino Support`): started as MQ03's end does it, 100 chips go to Elijah's dropbox. Not played: the repeat after 3 game days, the comp voucher. |
 | (no name) (`NVDLC01ClinicAutoDocQuest`) | none | a 4 second fade, a sound, controls back on (ordinary Auto-Docs) | **NOT PLAYED** | The short fade and sound after a cure at an ordinary Auto-Doc in the clinic; not played. Christine's pod has its own script, which was played (see MQ01c). |
 | (no name) (`NVDLC01GalaEventQuest`) | none | timers, enabling things, Dean's topic | **NOT PLAYED** | Needs MQ02. |
 | DLC01 Enemy Test (`NVDLC01EnemyTest`) | 10, 11, 20, 21, 22, 30, 31, 32, 50, 51 | teleports, keys, followers, enabling ambush groups | **NOT PLAYED** | [G] Looks like a developer test quest (it moves the player between test spots and enables trappers); not part of the story. |

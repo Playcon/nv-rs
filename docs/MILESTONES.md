@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the casino's support quests (`pr/casino-support`, 2026-10-10): the chip reward, the hologram vending machine and the challenge counters play; the comps are blocked by the casino games.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,

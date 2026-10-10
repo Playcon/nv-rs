@@ -860,6 +860,30 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The casino's support quests (`NVDLC01ChipReward`, `NVDLC01CasinoComps`, `NVDLC01HoloVendor`, `NVDLC01Challenges`)
+
+Played with `dead-money-vault.txt`, `dead-money-casino.txt` and `dead-money-theater.txt` and the
+launcher `FNV Casino Support`.
+
+* *`NVDLC01ChipReward` (played):* `StartQuest` (what MQ03's last stage does): its script puts 100
+  Sierra Madre chips into Elijah's dropbox at once (a probe line showed the count was at least 100)
+  and is set to repeat every 3 game days; the comp voucher is added only after the "huge"
+  casino comp.
+* *`NVDLC01CasinoComps` (started, blocked):* the quest runs; the comps come from the casino
+  winnings level (`GetCasinoWinningsLevel`), which stays 0 until the games record winnings. The
+  games (slots, roulette, blackjack) are Chazm's; `SetCasinoWinningsLevel` does nothing for a
+  casino not played at. Blocked by the games.
+* *`NVDLC01HoloVendor` (played):* the hologram vending machine in the Tampico (`020139E9`,
+  activated with its `OnActivate` run) shows its first-use box ("This is an unusual-looking
+  crafting station...") and sets `bFirstHoloVendingMachine`; the recipe menu follows on the
+  next use (the crafting menu is the existing one).
+* *`NVDLC01Challenges` (played through the routes):* the challenge counters this DLC's scripts
+  call were seen in the routes: "Loose Ends 1/3 to 3/3", "Assemble Your Crew 3/3", "Having a Ball
+  1/1", "Safety Deposit Box 1/1"; the quest's own "Authority Issues" counter (holograms turning
+  on the player) and the "History's Sake" note flags were not played.
+* *Not played:* the comp voucher, the vending machine's recipes, the other challenges.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
