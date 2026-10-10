@@ -1210,6 +1210,25 @@ the launchers `FNV Lobby Intercom` and `FNV Suites Terminal FX`.
   in the game, Christine's talk after it, the tape objectives.
 * *Guessed [G]:* nothing. [C] The wait between the lobby lines in the original.
 
+### Dismissing the player's Mojave companions (`NVDLC01NewVegasFollowerFireQuest`, `NVDLC01ArcadeGoodbye`)
+
+Played with `dead-money-casino.txt` and the launcher `FNV Follower Fire` (the quest is
+started the way the Bunker's arrival starts it, with a companion hired).
+
+* *Played in the viewer (on current main):* with a hired human companion (set with
+  `set VNPCFollowers.bHumanoidInParty to 1` and `...bBooneHired to 1`, or `...ArcadeHired`)
+  `StartQuest NVDLC01NewVegasFollowerFireQuest` runs the script: the companion stops being a
+  teammate, leaves the follower faction, is moved home (`CraigBooneREF` to `BooneHomeMarkerREF`,
+  Arcade to `ArcadeHomeMarker`), the player loses the companion's perk, and the two boxes
+  "You have lost Boone's Spotter perk." / "Boone has returned to Novac." (Arcade: "Better
+  Healing", "returned to Freeside") are shown.
+* *`NVDLC01ArcadeGoodbye`:* a start-game quest with no stage and no script; whatever it holds
+  is dialogue. The dismissal above was played with Arcade and no spoken farewell was seen.
+  [C] Whether Arcade says a goodbye line in the original when he is dismissed on arrival.
+* *Not played:* the other companions' branches (Cass, Veronica, Lily, ED-E, Rex, Raul...)
+  and arriving by the bunker's door.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):

@@ -1103,6 +1103,7 @@ Dead Money, the fade timers (`pr/fade-timers`, 2026-10-10): the fade to credits 
 Dead Money, the developer quest `NVDLC01EnemyTest` (`pr/enemy-test`, 2026-10-10): stages 10 to 32 played by SetStage in a test character.
 Dead Money, the radio quests (`pr/radio-quests`, 2026-10-10): the eight radio quests start; the companion stations' distance rules play from the casino character; the radio conversations are blocked by the missing radio engine.
 Dead Money, Elijah's lobby intercom and the suites' terminal effects (`pr/elijah-barks`, 2026-10-10): the lobby introduction plays line by line; the vault elevator unlocking plays from `StartQuest`.
+Dead Money, dismissing the Mojave companions (`pr/follower-fire`, 2026-10-10): Boone's and Arcade's dismissals play from the casino character.
 
 ## Handoff
 
