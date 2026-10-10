@@ -829,6 +829,35 @@ Not played yet: Dean's rooftop (the holograms, the switches), Christine's
 switching station (the electrical box, the elevator, the remote terminal),
 and the Gala Event itself (MQ02).
 
+**Christine (MQ02c "Mixed Signals").** `characters/dead-money-act2-christine.txt`
+(Act 1 done, Elijah's greeting said, Christine hired); launch `NVDLC01Gala02
+--official --at 3335,7287,7625,0 --character
+characters/dead-money-act2-christine.txt --run "NVDLC01ChristineREF.MoveTo 0200AE2D"`
+(the form ID's first digits are the load index of Dead Money; the station is
+the interior `NVDLC01Gala02`, the Puesta del Sol Switching Station).
+* *Played in the viewer (on current main):* the interior loads in 5 s; the
+  trigger by the elevator shows "Ask Christine to take the elevator down"
+  and she starts her talk (her lines are stage directions: she is mute), and
+  the replies work (picked with `--say`, which prints the topics offered).
+  The electrical box: E on it (`--use`, the box's form `0200D3F7`) shows the
+  game's message with its buttons (`--answer-boxes --box-answers 1`: "Jury-rig
+  the circuit breaker", Repair 60 checked against the player's skill); the
+  repair succeeds, gives 60 XP, completes the objective and shows "Get
+  Christine to the elevator". The elevator's panel (`0200CFAC`) shows its
+  buttons and the room below the Down button describes. The "send Christine
+  down" result lines (`NVDLC01Gala02ElevatorDoorSCRIPT`'s button 4: in
+  position, stage 100, fire her, the destroyed elevator pieces) run and the
+  quest completes ("Quest completed: Mixed Signals").
+* *Not played:* the toxic cloud and its terminals (the terminal screens are
+  the terminals' owner's, Chazm's), the ghost gauntlet in the rooms, the
+  remote terminal's "Transfer Control" item run by hand, going up in the
+  elevator with Christine (a script move to West Town), and the later
+  replies by hand.
+* *Guessed [G]:* nothing new; the Repair check and the messages are the
+  game's data and scripts. Needed an engine fix on its own branch: Christine's
+  exit package from the Auto-Doc finishes at once (MQ01c) and an animated
+  pod door moves its collision, so she is not stuck inside it.
+
 ### The casino (MQ03)
 
 `characters/dead-money-casino.txt` starts in the casino (`NVDLC01Casino`,
