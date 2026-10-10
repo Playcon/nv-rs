@@ -10,6 +10,7 @@ decompiled is included.
 **57 quests**: 4 PLAYED, 21 PARTIAL, 31 NOT PLAYED, 1 NEVER STARTED.
 **57 quests**: 4 PLAYED, 20 PARTIAL, 32 NOT PLAYED, 1 NEVER STARTED.
 **57 quests**: 4 PLAYED, 26 PARTIAL, 26 NOT PLAYED, 1 NEVER STARTED.
+**57 quests**: 4 PLAYED, 22 PARTIAL, 30 NOT PLAYED, 1 NEVER STARTED.
 
 ## How to read it
 
@@ -90,8 +91,8 @@ Quests that hold Elijah's radio lines; their 'objectives' are mostly spoken line
 | Quest (editor ID) | Stages | Needs | Status | Notes |
 | --- | --- | --- | --- | --- |
 | Elijah Signal Established (`NVDLC01ElijahBarkTown`) | 27 stages (1 to 255) | radio on the collar, trigger volumes in the Villa, the Cloud, speakers, holograms, vending machines, the Gala route | **PARTIAL** | Played: his first lines at the fountain after the wake-up. Not heard: the place-triggered lines further on (the Cloud, the speakers, the clinic, the gala route, the casino gate) and the closing line when the player disobeys. |
-| Elijah Signal Re-Established (`NVDLC01ElijahBarkCasino`) | none (about 60 numbered lines) | radio in the casino, locks, holograms, vault, kitchen gas, collar timers | **NOT PLAYED** | Casino side; never reached. |
-| Lobby Casino Support Quest (`NVDLC01ElijahBarkLobby`) | none | casino lobby trigger | **NOT PLAYED** | Casino side; never reached. |
+| Elijah Signal Re-Established (`NVDLC01ElijahBarkCasino`) | none (about 60 numbered lines) | radio in the casino, locks, holograms, vault, kitchen gas, collar timers | **PARTIAL** | Started in the Lobby route; the tape objectives (ids 1E to DC) are not played. Its casino-side lines follow the power switch (see the casino route). [C] How the tape hunt goes in the original. |
+| Lobby Casino Support Quest (`NVDLC01ElijahBarkLobby`) | none | casino lobby trigger | **PARTIAL** | Played from `dead-money-casino.txt` in the Lobby (`FNV Lobby Intercom`): Elijah's full lobby introduction through the intercom, line after line, to `bElijahLobbyIntroDone`. Not played: the casino-side repeats. |
 | (no name) (`NVDLC01ElijahCollarBark`) | none | collar radio conversation (StartRadioConversation), timer | **PARTIAL** | The collar's radio interference messages worked in the Villa; the radio conversation playback itself isn't built (see the Radio section of DEAD_MONEY.md). |
 
 ### Companions and dialogue
@@ -109,8 +110,12 @@ Dialogue holders and timers for the companions.
 | (no name) (`NVDLC01DeanBarkTimer`) | none | 30 second timer, companion idle lines | **PARTIAL** | Played with `dead-money-act2-dean.txt` and `FNV Dean Barks`: at the rooftop Dean says "Do not leave me here." with his voice. Not played: his other states. |
 | (no name) (`NVDLC01ChristineBarkTimer`) | none | 30 second timer | **PARTIAL** | Started with the Christine escort character: the timer ticks and asks for her Act 3 idle topic, which has no line in Act 2 ("nothing to say"). Not played: Act 3 (suites). [C] Her idle barks in the original. |
 | (no name) (`NVDLC01ChristineTerminalFX`) | none | vault password terminal, elevator unlock, conversation | **NOT PLAYED** | Act 3; never reached. |
+| (no name) (`NVDLC01DogBarkTimer`) | none | 30 second timer, companion idle lines | **NOT PLAYED** | Never watched. |
+| (no name) (`NVDLC01DeanBarkTimer`) | none | 30 second timer, companion idle lines | **NOT PLAYED** | Never watched. |
+| (no name) (`NVDLC01ChristineBarkTimer`) | none | 30 second timer | **NOT PLAYED** | Never watched. |
+| (no name) (`NVDLC01ChristineTerminalFX`) | none | vault password terminal, elevator unlock, conversation | **PARTIAL** | Played from `dead-money-suites.txt` (`FNV Suites Terminal FX`): the quest started, the elevator unlocks and after 5 seconds "The Vault Elevator unlocks its seals". Not played: reaching it from the terminal (Chazm's), her talk after it. |
 | (no name) (`NVDLC01NewVegasFollowerFireQuest`) | none | dismissing the player's Mojave companions on arrival | **NOT PLAYED** | The test character has no companions, so it never had anything to do. |
-| (no name) (`NVDLC01StarletDialogue`) | none | hologram dialogue, bark counter | **NOT PLAYED** | Starlet's hologram dialogue; not tried. |
+| (no name) (`NVDLC01StarletDialogue`) | none | hologram dialogue, bark counter | **PARTIAL** | Played in the suites route: the Starlet hologram's barks count up `iHoloBark`; the quest holds only that counter. Her talk with the player is not played. |
 
 ### Collars and radio
 

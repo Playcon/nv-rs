@@ -1180,6 +1180,36 @@ variable values.
 * *Guessed [G]:* nothing. [C] In the original, which stations the player hears at
   the Villa and at the casino and when they stop.
 
+### Elijah's lobby intercom and the suites' terminal effects (`NVDLC01ElijahBarkLobby`, `NVDLC01ElijahBarkCasino`, `NVDLC01ChristineTerminalFX`, `NVDLC01StarletDialogue`)
+
+Played with `dead-money-casino.txt` and `dead-money-suites.txt` (no new character) and
+the launchers `FNV Lobby Intercom` and `FNV Suites Terminal FX`.
+
+* *Lobby intercom (played):* in `NVDLC01Lobby` the Lobby's own scene runs (the gas
+  grenade, the fade, the autosave, the Starlet hologram leaving), and with
+  the two Elijah quests started Elijah's intercom speaks his whole introduction in turn,
+  each line when the one before is done (`SayToDone` blocks of the Lobby intercom): "You inside.
+  Can you hear me?", "Good... thought that might be the end of you.", "Wondering what
+  happened? You were hit by casino security...", "Looks like the casino moved your
+  'friends' around...", "My signal should work through the speakers, now that you're
+  inside. Heh, heh! Welcome to the Sierra Madre", "This is what the Old World stood for",
+  "Beautiful... now its guests are all dead", "Now - with the casino sleeping, it's got
+  places closed off... we just need to wake it up"; the last sets
+  `bElijahLobbyIntroDone` (about 125 seconds from the start; one line every 8 to 12
+  seconds). The casino half (`...CasinoIntro`, `...Return`) follows the power switch (see the
+  casino route). The quest `NVDLC01ElijahBarkCasino` holds the tape objectives (its ids
+  1E to DC); the tape hunt itself is not played.
+* *Suites terminal effects (played):* started in the suites character,
+  `NVDLC01ChristineTerminalFX` makes Christine speak her vault-password bark (she is not
+  loaded in the player's view, so it is silent), unlocks the elevator and, after 5
+  seconds, shows "The Vault Elevator unlocks its seals. The way down to the Sierra Madre's
+  Vault is now open." and (in the original) starts her conversation. The Starlet hologram's
+  barks in the suites count up `NVDLC01StarletDialogue.iHoloBark` (seen in the suites route:
+  "result script: set ...iHoloBark ...").
+* *Not played:* the terminals themselves (Chazm's) that start the terminal effect
+  in the game, Christine's talk after it, the tape objectives.
+* *Guessed [G]:* nothing. [C] The wait between the lobby lines in the original.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
