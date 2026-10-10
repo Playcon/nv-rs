@@ -1287,6 +1287,20 @@ Started in West Town with `dead-money-act2-dean.txt` (the Dean escort's cell) an
   triggers that the escorts reach by walking.
 * *Guessed [G]:* nothing.
 
+### The Gala fireworks quest (`NVDLC01GalaEventQuest`)
+
+Played with `dead-money-gala.txt` and the launcher `FNV Gala Fireworks` (the same route as
+`FNV Gala Tower`, with the quest started by a line as the tower door's script would).
+
+* *Played in the viewer (on current main):* with the quest started and MQ02 set to stage 50,
+  its script plays the fireworks display (`playgroup Right`), counts 33.33 seconds, enables the
+  six loops and stops; at stage 50 the event's results run ("Having a Ball 1/1", XP +100,
+  autosave, the post-Gala ghost people at the Villa enabled, "Completed: Get to the Gala Event
+  control panel").
+* *Not played:* the fireworks' look (the sequences on `NVDLC01FWEventREF` are not drawn), the
+  panel's own talk.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
