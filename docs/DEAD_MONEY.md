@@ -860,6 +860,47 @@ The room's scripts run.
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
 
+### The Tampico theatre (MQ03b "Curtain Call at the Tampico")
+
+`characters/dead-money-theater.txt` (the suites character: the casino
+character plus the power switch's result, MQ03a at stage 10) and `NVDLC01Theater
+--official --character characters/dead-money-theater.txt`. The launcher
+`FNV Theater Dean` drives the route with `--run` and `--run-at` lines (listed
+below as the "helpers").
+
+* *Played in the viewer (on current main), with the game's own scripts:* the
+  key trigger (`0201406D`, the player moved into it): stage 15, "Search for the
+  backstage key"; Vera's Partitures (`0200FFDA`, activated with its `OnActivate`
+  run): the key appears, objective 15 done, "A key slides out of Vera's
+  Partitures"; the backstage door (`020047AA`) opening makes Dean (a ghost
+  until then) bark "Hey... guess who finally showed", turns the three theatre
+  holograms aggressive and makes them hunt the player; Dean's holotape added
+  (its `OnAdd`): stage 30; the projector (`02004D1D`) says it needs a tape, then
+  with the tape its two-button box ("Play Dean Domino's Holotape", "Leave it
+  alone"); button 0 runs the show: stage 40, the friend holograms and Dean's
+  hologram appear and play their idles, the three hunting holograms stop and walk
+  to their end spots, Elijah's intercom says "Now, deal with the Ghoul", Dean
+  stops being a ghost and calls the player down; killing Dean (console `Kill`):
+  "Dean has died.", XP +50, "Loose Ends 1/3", the objective "Escape the Tampico
+  before Dean's collar sets off your own"; the escape trigger (`02013F79`,
+  the player moved into it, standing in the lobby side): stage 100, "Quest
+  completed: Curtain Call at the Tampico", the lobby encounter starts.
+* *Helpers (console lines, not the game's own route):* `set NVDLC01Collars to 0`
+  (the quest script's own off switch for the speaker-radius collar; without it the
+  player standing near the stage speakers is killed within seconds, the game's
+  rule, which a player avoids by shooting the speakers or running, neither
+  played), `player.MoveTo` into the two trigger volumes, `Activate Player 1` on the
+  partitures, door and projector (the viewer has no walk-and-press for them in
+  a scripted run), `player.AddItem` for the tape (found backstage in the game),
+  `Kill` for the fight with Dean.
+* *Not played:* walking the route by hand, the speakers, shooting or sneaking
+  past the holograms, the fight itself (Dean regenerates after the show), Dean's
+  dialogue (his greeting menu opens only after the show; not tried), the
+  second way out (the vault elevator and the Vera tape, `bVeraTapeFound`),
+  the 48 second collar timer after Dean's death (not watched to its end here).
+* *Guessed [G]:* nothing new. [C] How long a player has to leave after Dean
+  dies, and whether the holograms can be outrun.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):

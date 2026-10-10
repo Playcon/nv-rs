@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the Tampico theatre (MQ03b, `pr/theater-dean`, 2026-10-10): the key, the holograms, Dean's holotape and the projector show, Dean's death and the escape (stage 100) from a test character with console-line helpers; not played: by hand, the fight, Dean's talk.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
