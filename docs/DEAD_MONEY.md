@@ -936,6 +936,29 @@ The room's scripts run.
   doors, the holograms before the switch), the casino games (slots,
   roulette, blackjack: the menus aren't built), the intercom bark triggers,
   and the later MQ03 steps.
+* *The quests' places (played on current main, `characters/dead-money-casino.txt`).*
+  The kitchen (`NVDLC01Restaurant`, the Cantina Madrid), the theater
+  (`NVDLC01Theater`, the Tampico) and the executive suites (`NVDLC01Suites`)
+  all load in about 5 seconds and run their start scripts (Dean becomes a
+  ghost in the theater, the suites' holograms show, Christine is enabled).
+  Pulling the power switch starts MQ03b and MQ03c (`SetStage NVDLC01MQ03a
+  10`). *The kitchen leg of MQ03a:* the three gas valves are used with E
+  (here `Activate`, with `--answer-boxes --box-answers 1,0,...`): each shows
+  "This valve is in need of repair", the repair succeeds with a Repair skill
+  check, gives 30 XP and counts into `nGasTraps`; the third one completes
+  the objective and shows "Confront Dog and convince him to back down". Dog
+  barks through the intercom, his collar beeps faster as the timer runs,
+  he says "No! Dog, get back in the c-" and his collar blows him up: "Dog
+  has died", "Loose Ends 1/3" and "Destroyed All Companions" show, and in
+  one run "Heist of the Centuries: Quest Failed" followed. Whether that
+  failure is right for a run where all three valves were repaired is not
+  settled: the scripts fail the heist only when fewer than three are
+  repaired (`NVDLC01DogScript`'s death block), and the repairs and Dog's
+  scene were racing in that run [C: in the original, repair all three
+  valves quickly and write down what Dog does].
+* *Not played:* the maintenance pass (the key), the Dog and God replies, the
+  theater's holograms and Dean's fight, Christine's fight in the suites, the
+  collar timer's full course, and every ending of MQ03.
 
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
