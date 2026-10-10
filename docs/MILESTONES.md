@@ -1104,6 +1104,7 @@ Dead Money, the developer quest `NVDLC01EnemyTest` (`pr/enemy-test`, 2026-10-10)
 Dead Money, the radio quests (`pr/radio-quests`, 2026-10-10): the eight radio quests start; the companion stations' distance rules play from the casino character; the radio conversations are blocked by the missing radio engine.
 Dead Money, Elijah's lobby intercom and the suites' terminal effects (`pr/elijah-barks`, 2026-10-10): the lobby introduction plays line by line; the vault elevator unlocking plays from `StartQuest`.
 Dead Money, dismissing the Mojave companions (`pr/follower-fire`, 2026-10-10): Boone's and Arcade's dismissals play from the casino character.
+Dead Money, the toxic cloud (`pr/toxic-quests`, 2026-10-10): the cloud's damage plays to the player's death; the global damage is blocked by the missing Hardcore setting.
 
 ## Handoff
 

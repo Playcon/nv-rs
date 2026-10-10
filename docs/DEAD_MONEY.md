@@ -1229,6 +1229,27 @@ started the way the Bunker's arrival starts it, with a companion hired).
   and arriving by the bunker's door.
 * *Guessed [G]:* nothing.
 
+### The toxic cloud and the global toxic damage (`NVDLC01ToxicCloud`, `NVDLC01GlobalToxicDamage`)
+
+Played with `dead-money-act2-christine.txt` (the switching station, which has a cloud trigger
+volume) and `dead-money-act2.txt`, and the launchers `FNV Toxic Cloud` and `FNV Global Toxic`.
+
+* *Toxic cloud (played):* the player moved into the cloud's trigger volume
+  (`0200E2D4`, `OnTriggerEnter Player` of `NVDLC01ToxicCloudTriggerSCRIPT`): the weather
+  is not changed indoors, the image effect `NVDLC01ToxicCloudStartISFX` is applied, "You are
+  being poisoned by a toxic cloud." shows, the quest starts and its script takes
+  `GetBaseActorValue Health / 40` health every quarter-second after the one-second
+  delay (5 seconds with Dean hired); within about 10 seconds the health is low and the player
+  dies ("You died.").
+* *Global toxic damage (started, blocked):* `StartQuest` runs the script, which does nothing
+  unless `Player.IsHardcore` is 1; nv-rs has no way to turn Hardcore on (the new-game
+  question is not built), so no damage was seen in 40 seconds in the Villa's towns.
+  [C] In the original, the size and rhythm of the Villa's outdoor damage in Hardcore (3
+  health every 20 seconds in the script).
+* *Not played:* leaving the cloud (`OnTriggerLeave`), Dean's reduced damage, the exterior
+  weather change.
+* *Guessed [G]:* nothing.
+
 ## The clinic basement and the Auto-Doc wing (MQ01c, stages 20 to 40)
 
 Played at the rules level (`world`, with the real data) and in the viewer (`--use`, see below):
