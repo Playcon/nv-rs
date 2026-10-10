@@ -657,6 +657,8 @@ reaches Elijah's hologram and his dialogue menu. `INFC`: greetings of nine
 Goodsprings NPCs unchanged. **Next action:** trace `RecipeMenu` (`007274b0`)
 and the follower rules so the Dead Money routes run without guesses.
 
+Dead Money, the casino quests (MQ03a to c, `claude/casino-quests`, 2026-10-10): the kitchen, theater and suites load and run their start scripts; the kitchen's three gas valves work with the game's message buttons and Repair check; Dog's collar scene plays to his death; no engine change. Not played: the key, the Dog and God replies, the theater and suites fights ([DEAD_MONEY.md](DEAD_MONEY.md), "The casino"). **Next action:** record the kitchen in the original (all three valves repaired quickly) and compare Dog's scene.
+
 M2 batch (`claude/m2-physics-3`, 2026-10-06): playtest physics fixes.
 Traced and fixed: a loading place's bodies go into Havok asleep
 (`00c674d0`, `00c6b0a0`; Doc Mitchell's clutter, the rail bottle and the
