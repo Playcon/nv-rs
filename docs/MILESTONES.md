@@ -1090,6 +1090,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money, the toxic cloud (`pr/toxic-quests`, 2026-10-10): the cloud's damage plays to the player's death; the global damage is blocked by the missing Hardcore setting.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,
