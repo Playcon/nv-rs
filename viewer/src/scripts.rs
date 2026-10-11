@@ -471,7 +471,7 @@ fn run_cell_scripts(
 }
 
 /// What the player looks at within reach that E would use: an item, a
-/// container, or an object whose script has an `OnActivate` block (people
+/// container, a terminal, or an object whose script has an `OnActivate` block (people
 /// and doors have their own handling), with the prompt for it.
 fn object_in_view(
     cache: &ScriptCache,
@@ -495,6 +495,7 @@ fn object_in_view(
     let usable = r.is_item()
         || r.is_container()
         || r.is_furniture()
+        || r.is_terminal()
         || pile
         || mine
         || has_on_activate(order, cache, r);
