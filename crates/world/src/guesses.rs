@@ -5,7 +5,9 @@
 //! (`ai::current_package`), `IsAnimPlaying` on a person, the dying
 //! body taking the actor's velocity (viewer `ai`), billboards turning
 //! about their up axis (`cellview::impacts`) and the falloff-flag reading
-//! of impact shaders (`preview::cell`). Teammates coming along to another
+//! of impact shaders (`preview::cell`), someone stuck against a shut
+//! door opening it (`ai::open_door_in_the_way`, the sliding doors the
+//! navmesh doesn't list). Teammates coming along to another
 //! place is traced (`companions::come_along`, `00973de0`) and always
 //! on. See `docs/CONTRIB_PLAYCON.md`.
 
