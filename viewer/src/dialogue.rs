@@ -680,7 +680,7 @@ pub fn talk(
         {
             return target.0.take();
         }
-        let name = order.get(t.base)?.record().ok()?.full_name()?;
+        let name = dialogue::speaker_name(order, t.base)?;
         Some((t, name))
     });
     // A script asked someone to talk to the player (`SayTo`,
@@ -701,7 +701,7 @@ pub fn talk(
                 })
             })
             .and_then(|t| {
-                let name = order.get(t.base)?.record().ok()?.full_name()?;
+                let name = dialogue::speaker_name(order, t.base)?;
                 Some((t, name))
             });
         match found {

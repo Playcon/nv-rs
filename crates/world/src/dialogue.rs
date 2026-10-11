@@ -710,6 +710,18 @@ impl Info {
     }
 }
 
+/// The name a speaker is shown by: the record's own, else its editor ID. A
+/// loudspeaker (a talking activator such as Dead Money's police station
+/// speaker, which says God's lines) has no name, and without this a script's
+/// `SayTo` on it was dropped as "not loaded".
+pub fn speaker_name(order: &LoadOrder, base: FormId) -> Option<String> {
+    let record = order.get(base)?.record().ok()?;
+    record
+        .full_name()
+        .filter(|n| !n.is_empty())
+        .or_else(|| record.editor_id())
+}
+
 /// Every line whose conditions name the speaker (its base record, or its
 /// voice type), in record order. Lines anyone can say aren't included.
 pub fn lines_for(order: &LoadOrder, base: FormId, voice: Option<FormId>) -> Vec<Info> {

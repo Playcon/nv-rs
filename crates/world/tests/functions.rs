@@ -65,6 +65,23 @@ fn children_by_race_flag_or_body_model() {
     assert_eq!(q("player.IsChild"), 0.0);
 }
 
+/// A speaker with no name (a loudspeaker) is shown by its editor ID, else a
+/// script's `SayTo` on it was dropped.
+#[test]
+fn a_speaker_without_a_name_is_shown_by_its_editor_id() {
+    let (_data, order) = order("fn-speaker-name");
+    // The test door has no `FULL`; the chest has one.
+    assert_eq!(
+        world::dialogue::speaker_name(&order, FormId(DOOR)).as_deref(),
+        Some("TestDoor")
+    );
+    assert_eq!(
+        world::dialogue::speaker_name(&order, FormId(CHEST)).as_deref(),
+        Some("Chest")
+    );
+    assert_eq!(world::dialogue::speaker_name(&order, FormId(0xDEAD)), None);
+}
+
 #[test]
 fn restraints_doors_and_owners() {
     let (_data, order) = order("fn-doors");
