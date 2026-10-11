@@ -22,6 +22,22 @@ fn info(order: &LoadOrder, id: u32) -> dialogue::Info {
     dialogue::Info::load(order, FormId(id)).unwrap()
 }
 
+/// A voice note says its topic's line as its speaker: the line and the
+/// speaker come back (the viewer plays the audio and, behind `NV_GUESSES`,
+/// runs the result script); a text note, or a speaker with nothing to say,
+/// gives none.
+#[test]
+fn a_voice_note_has_its_speakers_line() {
+    let (_data, order) = order("voice-note");
+    let state = GameState::new(&order);
+    let (line, speaker) = dialogue::voice_note_line(&order, &state, FormId(VOICE_NOTE)).unwrap();
+    assert_eq!(speaker, FormId(DOC));
+    assert_eq!(line.form_id, FormId(THANKS_LINE));
+    // Not a voice note: a topic, a quest.
+    assert!(dialogue::voice_note_line(&order, &state, FormId(THANKS)).is_none());
+    assert!(dialogue::voice_note_line(&order, &state, FormId(QUEST)).is_none());
+}
+
 /// The farewell runs through its follow-ups to the Goodbye line, whose
 /// result scripts run and which closes the menu: the player can leave.
 #[test]

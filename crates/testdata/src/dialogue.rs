@@ -26,6 +26,8 @@ pub mod ids {
     /// Topics.
     pub const OUTRO: u32 = 0x1220;
     pub const THANKS: u32 = 0x1221;
+    /// A voice note (`NOTE` kind 3): `DOC` says `THANKS`.
+    pub const VOICE_NOTE: u32 = 0x1260;
     pub const RANDOM_TOPIC: u32 = 0x1222;
     pub const SMART_TOPIC: u32 = 0x1223;
     pub const IMMEDIATE_TOPIC: u32 = 0x1224;
@@ -259,6 +261,16 @@ pub fn world(tag: &str) -> TempData {
     plugin.extend(crate::group(*b"QUST", 0, &record(b"QUST", QUEST, &quest)));
     plugin.extend(crate::group(*b"NPC_", 0, &npcs));
     plugin.extend(crate::group(*b"DIAL", 0, &dialogue));
+    let mut note = edid("TestVoiceNote");
+    note.extend(sub(b"FULL", &zstr("Voice note")));
+    note.extend(sub(b"DATA", &[3]));
+    note.extend(sub(b"SNAM", &DOC.to_le_bytes()));
+    note.extend(sub(b"TNAM", &THANKS.to_le_bytes()));
+    plugin.extend(crate::group(
+        *b"NOTE",
+        0,
+        &record(b"NOTE", VOICE_NOTE, &note),
+    ));
     data.write("FalloutNV.esm", &plugin);
     data
 }

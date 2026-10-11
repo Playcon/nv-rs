@@ -319,7 +319,7 @@ fn run_line_script(
 /// A line starts: it's been said, the speaker has talked to the player,
 /// the topics it names are learned, and its first result script runs (in
 /// the dialogue menu, unless the line is flagged not to: `0083ebb0`).
-fn begin_line(
+pub(crate) fn begin_line(
     order: &esm::LoadOrder,
     scripts: &ScriptCache,
     state: &mut GameState,

@@ -710,6 +710,34 @@ impl Info {
     }
 }
 
+/// The line a voice note (`NOTE` kind 3, a holotape) says when it plays:
+/// the first line of its topic (`TNAM`) that its speaker (`SNAM`) may say
+/// now, and the speaker. `None` for other notes, or when nothing may be said.
+pub fn voice_note_line(
+    order: &LoadOrder,
+    state: &GameState,
+    note: FormId,
+) -> Option<(Info, FormId)> {
+    let rr = order.get(note)?;
+    let record = rr.record().ok()?;
+    let kind = record
+        .get(esm::sig::DATA)
+        .and_then(|s| s.data.first().copied())?;
+    if kind != 3 {
+        return None;
+    }
+    let form = |sig: &[u8; 4]| {
+        record
+            .get(FourCC::new(sig))
+            .filter(|s| s.data.len() >= 4)
+            .map(|s| global(&rr, &s.data))
+    };
+    let (topic, speaker) = (form(b"TNAM")?, form(b"SNAM")?);
+    let who = Speaker::load(order, speaker, speaker)?;
+    let info = pick(order, topic, &who, state)?;
+    Some((info, speaker))
+}
+
 /// Every line whose conditions name the speaker (its base record, or its
 /// voice type), in record order. Lines anyone can say aren't included.
 pub fn lines_for(order: &LoadOrder, base: FormId, voice: Option<FormId>) -> Vec<Info> {

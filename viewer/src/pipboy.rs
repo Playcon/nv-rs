@@ -956,6 +956,7 @@ pub struct Around<'w> {
     controls: Option<Res<'w, crate::controls::Controls>>,
     real: Res<'w, Time<bevy::time::Real>>,
     radio_out: ResMut<'w, crate::radio::RadioOut>,
+    scripts: Res<'w, crate::scripts::Scripts>,
 }
 
 /// The mouse as the Pip-Boy reads it: the window's pointer, the first-
@@ -1110,6 +1111,7 @@ fn pipboy_keys(
         controls,
         real,
         mut radio_out,
+        scripts,
         ..
     } = around;
     let order = &game.0.order;
@@ -1701,10 +1703,23 @@ fn pipboy_keys(
             // whole length their lengths and 500 ms between each two, the
             // first started.
             Action::PlayNote(form) => {
-                let pieces = note_pieces(&game.0, state, FormId(form));
+                let line = note_line(&game.0, state, FormId(form));
+                let pieces = note_pieces(&game.0, state, FormId(form), line.as_ref());
                 if pieces.is_empty() {
                     println!("Note {}: no audio found.", FormId(form));
                     continue;
+                }
+                // [G] STOPGAP (`NV_GUESSES=1`): the line a voice note plays is
+                // said as `SayTo` says one, so its result script runs: Dead
+                // Money's Dog Command Tape ("Dog, back in the cage.") turns Dog
+                // into God and starts MQ01a stage 40 that way. When the original
+                // runs it (at the start, or when the audio ends) is not traced.
+                if world::guesses::enabled() {
+                    if let Some((info, speaker)) = &line {
+                        crate::dialogue::begin_line(
+                            order, &scripts.0, state, info, *speaker, false,
+                        );
+                    }
                 }
                 let total_ms =
                     pieces.iter().map(|p| p.2).sum::<f32>() + (pieces.len() as f32 - 1.0) * 500.0;
@@ -1809,10 +1824,21 @@ pub(crate) fn audio_ms(path: &str, bytes: &[u8]) -> Option<f32> {
 /// (`SNAM`, an NPC) says in its topic (`TNAM`, `005e9240` / `005e92a0`:
 /// the first the speaker can say, `world::dialogue::pick`), each response's
 /// voice file of the speaker's voice type.
+/// The line a voice note (kind 3) says: the first line of its topic (`TNAM`)
+/// that its speaker (`SNAM`) may say now, and the speaker.
+fn note_line(
+    game: &cellview::Game,
+    state: &world::scripting::GameState,
+    note: FormId,
+) -> Option<(world::dialogue::Info, FormId)> {
+    world::dialogue::voice_note_line(&game.order, state, note)
+}
+
 fn note_pieces(
     game: &cellview::Game,
     state: &world::scripting::GameState,
     note: FormId,
+    line: Option<&(world::dialogue::Info, FormId)>,
 ) -> Vec<(Vec<u8>, bool, f32)> {
     let order = &game.order;
     let Some((rr, record)) = order
@@ -1851,24 +1877,20 @@ fn note_pieces(
             }
         }
         3 => {
-            let (Some(topic), Some(speaker)) = (form(b"TNAM"), form(b"SNAM")) else {
+            let Some((info, speaker)) = line else {
                 return out;
             };
-            let Some(who) = world::dialogue::Speaker::load(order, speaker, speaker) else {
+            let Some(voice) =
+                world::dialogue::Speaker::load(order, *speaker, *speaker).and_then(|who| who.voice)
+            else {
                 return out;
             };
-            let Some(voice) = who.voice else {
-                return out;
-            };
-            if let Some(info) = world::dialogue::pick(order, topic, &who, state) {
-                for response in &info.responses {
-                    let Some(path) = world::dialogue::voice_path(order, &info, response, voice)
-                    else {
-                        continue;
-                    };
-                    if let Some(bytes) = game.assets.read(&path).ok().flatten() {
-                        push(path, bytes);
-                    }
+            for response in &info.responses {
+                let Some(path) = world::dialogue::voice_path(order, info, response, voice) else {
+                    continue;
+                };
+                if let Some(bytes) = game.assets.read(&path).ok().flatten() {
+                    push(path, bytes);
                 }
             }
         }
