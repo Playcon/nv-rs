@@ -65,6 +65,28 @@ fn children_by_race_flag_or_body_model() {
     assert_eq!(q("player.IsChild"), 0.0);
 }
 
+/// A note lying in the world (a holodisk) goes into the player's notes when
+/// they pick it up, so `GetHasNote` is true (Dead Money's Dog Command Tape
+/// moves MQ01a on that); it isn't carried in the inventory.
+#[test]
+fn picking_up_a_note_adds_it_to_the_players_notes() {
+    let (_data, order) = order("fn-pickup-note");
+    let scripts = ScriptCache::default();
+    let mut state = new_game(&order);
+    assert_eq!(
+        ask(&order, &scripts, &mut state, "GetHasNote TestNote"),
+        0.0
+    );
+    state.pick_up(&order, FormId(0x7777), FormId(NOTE), 1);
+    assert_eq!(
+        ask(&order, &scripts, &mut state, "GetHasNote TestNote"),
+        1.0
+    );
+    assert!(state.notes.contains(&FormId(NOTE)));
+    assert_eq!(state.items.get(&(PLAYER_REF, FormId(NOTE))), None);
+    assert_eq!(state.disabled.get(&FormId(0x7777)), Some(&true));
+}
+
 #[test]
 fn restraints_doors_and_owners() {
     let (_data, order) = order("fn-doors");

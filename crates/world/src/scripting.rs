@@ -1014,8 +1014,20 @@ impl GameState {
 
     /// The player picks up an item lying in the world: it goes into their
     /// inventory (with its script, when one dropped it there) and the
-    /// placed one is gone.
+    /// placed one is gone. A note (a holodisk, a letter: `NOTE`) goes into
+    /// their notes instead, which is what `GetHasNote` asks (the Pip-Boy's
+    /// Data tab lists them): Dead Money's Dog Command Tape moves MQ01a to
+    /// stage 30 that way.
     pub fn pick_up(&mut self, order: &LoadOrder, reference: FormId, item: FormId, count: i32) {
+        if order
+            .get(item)
+            .is_some_and(|r| r.entry.header.kind.as_bytes() == b"NOTE")
+        {
+            self.notes.insert(item);
+            self.disabled.insert(reference, true);
+            self.events.push(Event::Enable(reference, false));
+            return;
+        }
         self.stock(order, PLAYER_REF);
         *self.items.entry((PLAYER_REF, item)).or_insert(0) += count;
         let carried = self
