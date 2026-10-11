@@ -4298,20 +4298,9 @@ fn open_door_in_the_way(
     walker: FormId,
     at: [f32; 3],
 ) {
-    let nearest = doors
-        .doors
-        .values()
-        .filter(|d| {
-            world::doors::open_state(order, state, d.reference) == world::doors::OpenState::Closed
-                && world::locks::lock_now(order, state, d.reference).is_none()
-        })
-        .filter_map(|d| {
-            let (_, _, p, _) = state.place(order, d.reference)?;
-            let across = (p[0] - at[0]).hypot(p[1] - at[1]);
-            ((p[2] - at[2]).abs() < 160.0 && across < 160.0).then_some((d.reference, across))
-        })
-        .min_by(|a, b| a.1.total_cmp(&b.1));
-    if let Some((door, _)) = nearest {
+    let nearest =
+        world::doors::shut_door_near(order, state, doors.doors.values().map(|d| d.reference), at);
+    if let Some(door) = nearest {
         println!("{walker} is stuck against the shut door {door}: opened for them ([G]).");
         crate::doors::activate(order, state, sounds, door, Some(walker));
     }

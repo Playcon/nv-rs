@@ -65,6 +65,36 @@ fn children_by_race_flag_or_body_model() {
     assert_eq!(q("player.IsChild"), 0.0);
 }
 
+/// [G] stopgap: the door someone stuck at a shut door opens is the nearest
+/// one that is shut and unlocked, within a doorway's reach across and up.
+#[test]
+fn a_walker_stuck_at_a_shut_door_gets_that_door() {
+    let (_data, order) = order("fn-stuck-door");
+    let state = new_game(&order);
+    let doors = || [DOOR_REF, OPEN_DOOR_REF, LOCKED_DOOR_REF].map(FormId);
+    // The shut door is at (300, 0, 0): 22 units from here.
+    assert_eq!(
+        world::doors::shut_door_near(&order, &state, doors(), [280.0, 10.0, 0.0]),
+        Some(FormId(DOOR_REF))
+    );
+    // Beside the open door and the locked one: neither is opened for them,
+    // and the shut one is out of reach.
+    assert_eq!(
+        world::doors::shut_door_near(&order, &state, doors(), [280.0, 190.0, 0.0]),
+        None
+    );
+    // Another floor, though the same spot across.
+    assert_eq!(
+        world::doors::shut_door_near(&order, &state, doors(), [280.0, 10.0, 500.0]),
+        None
+    );
+    // No doors listed, none to open.
+    assert_eq!(
+        world::doors::shut_door_near(&order, &state, [], [280.0, 10.0, 0.0]),
+        None
+    );
+}
+
 #[test]
 fn restraints_doors_and_owners() {
     let (_data, order) = order("fn-doors");

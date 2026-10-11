@@ -177,6 +177,36 @@ pub fn lengths(order: &LoadOrder, state: &GameState, door: FormId) -> Option<Len
     state.door_lengths.get(&base).copied()
 }
 
+/// [G] STOPGAP (the caller checks [`crate::guesses::enabled`]): the shut,
+/// unlocked door among `doors` nearest to `at` within a doorway's reach
+/// (160 units across, 160 up or down), for someone whose walk got stuck
+/// there to open. The game's path following opens the doors across a path
+/// (`009e20c0`), but the viewer's navmesh only lists swing doors that are
+/// not sliding, so a path through a sliding door (the Sierra Madre vault's
+/// two entry doors, flag 0x10) lists no door to open and the walker stands
+/// at it. How the original gets someone through a sliding door is not
+/// traced.
+pub fn shut_door_near(
+    order: &LoadOrder,
+    state: &GameState,
+    doors: impl IntoIterator<Item = FormId>,
+    at: [f32; 3],
+) -> Option<FormId> {
+    doors
+        .into_iter()
+        .filter(|&d| {
+            open_state(order, state, d) == OpenState::Closed
+                && crate::locks::lock_now(order, state, d).is_none()
+        })
+        .filter_map(|d| {
+            let (_, _, p, _) = state.place(order, d)?;
+            let across = (p[0] - at[0]).hypot(p[1] - at[1]);
+            ((p[2] - at[2]).abs() < 160.0 && across < 160.0).then_some((d, across))
+        })
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(d, _)| d)
+}
+
 /// What `GetOpenState` answers for a reference now (`0047b250`).
 pub fn open_state(order: &LoadOrder, state: &GameState, reference: FormId) -> OpenState {
     let kind = base_of(order, reference).and_then(|b| kind_of(order, b));
