@@ -894,13 +894,19 @@ characters/dead-money-gala.txt` (the bell tower's control panel,
   to the theater, the suites and the kitchen, the gauntlet's ghosts, triggers
   and spawn points enabled. The event's own timer then runs (33 seconds) and
   enables the six firework loops. The casino gate trigger sets stage 100.
-* *Not played:* the climb to the tower (ladders and stairs), the panel
-  itself: E on it (a talking activator with no `GREETING` line) opens nothing,
-  because the game's rule found so far is "no line: nothing"
-  (`docs/DIALOGUE.md`, `005fa9be`); how a talking activator offers its
-  player topic ("I'm ready...") is not traced [C: in the original, activate
-  the panel and write down what opens]. Also not played: the fireworks'
-  look (`PlayGroup Right` on the display) and the ghost gauntlet.
+* *Not played:* the climb to the tower (ladders and stairs). The panel
+  itself: it does have `GREETING` lines (spoken by the panel's own base,
+  `NVDLC01GalaDialogueActivator`, in the quest `NVDLC01GalaEventQuest`,
+  which must be running: the tower door's script starts it), so the "no line:
+  nothing" rule (`docs/DIALOGUE.md`, `005fa9be`) is not what stopped it; E on
+  a talking activator was what opened nothing, and with the stopgap `[G]`
+  `pr/stopgap-talking-activator-actor` (`NV_GUESSES=1`) it talks: Elijah's
+  greeting, the three companions' answers, and Elijah's last reply, whose
+  result runs `SetDestroyed 1` and `SetStage NVDLC01MQ02 50` (played by
+  hand 2026-10-11). How the original starts the talk is not traced [C]. Also
+  not played: the fireworks' look (`PlayGroup Right` on the display) and the
+  ghost gauntlet. The viewer's graphics driver on an Intel Iris Xe laptop
+  crashes when the Villa squares load south of the tower: `NV_LOAD_RADIUS=0`.
 * *Guessed [G]:* nothing new.
 * Dense graphics: the tower's area crashed the viewer on a laptop GPU (3 of
   3 runs with the usual 5 by 5 squares, 1 of 3 with one square); see the
