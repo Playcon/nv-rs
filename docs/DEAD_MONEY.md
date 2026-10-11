@@ -872,11 +872,15 @@ volume) and `dead-money-act2.txt`, and the launchers `FNV Toxic Cloud` and `FNV 
   `GetBaseActorValue Health / 40` health every quarter-second after the one-second
   delay (5 seconds with Dean hired); within about 10 seconds the health is low and the player
   dies ("You died.").
-* *Global toxic damage (started, blocked):* `StartQuest` runs the script, which does nothing
-  unless `Player.IsHardcore` is 1; nv-rs has no way to turn Hardcore on (the new-game
-  question is not built), so no damage was seen in 40 seconds in the Villa's towns.
-  [C] In the original, the size and rhythm of the Villa's outdoor damage in Hardcore (3
-  health every 20 seconds in the script).
+* *Global toxic damage (Hardcore only):* `StartQuest` runs the script, which does nothing
+  unless `Player.IsHardcore` is 1. nv-rs can switch Hardcore on: the script function
+  `SetHardcore 1` (`needs::set_hardcore`, `00969e90`), so `--run "SetHardcore 1"` in a
+  launcher line is enough (the new-game question that asks it is not built). With it on,
+  outdoors in the Villa and the towns the script takes 3 health on each pass of its 20 second
+  quest delay, never below 10 health. Elijah's answers to "Will exposure kill me?" and "Why is
+  my vision blurring?" also change with Hardcore (each has a Hardcore line and a normal one,
+  both in the plugin). Not seen running yet.
+  [C] In the original, the size and rhythm of the Villa's outdoor damage in Hardcore.
 * *Not played:* leaving the cloud (`OnTriggerLeave`), Dean's reduced damage, the exterior
   weather change.
 * *Guessed [G]:* nothing.
