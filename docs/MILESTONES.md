@@ -1383,6 +1383,8 @@ distant water and other rendering leftovers stay in the research archives.
 Promote only for a milestone blocker or explicit user priority. Small gameplay
 fixes needed by the active route count as blockers; never invent a substitute.
 
+Dead Money stopgap (`pr/stopgap-talking-activator-actor`, 2026-10-11, behind NV_GUESSES=1 [G]): a talking activator speaks as the actor a script gave it (`SetTalkingActivatorActor`) and E on it talks, for the vault's Elijah intercom; test in `contrib_guesses`; not yet seen running.
+
 ## Handoff
 
 After each batch replace the active-work section with the latest outcome,

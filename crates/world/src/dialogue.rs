@@ -799,6 +799,47 @@ impl Speaker {
     }
 }
 
+/// Who speaks when the player talks to `reference` (a placed object of
+/// base `base`): the object's own speaker, except a talking activator that
+/// a script gave an actor to speak as (`SetTalkingActivatorActor`,
+/// `005d4cc0` -> `004ff0e0`, which stores the actor in the base's +0x90;
+/// the vault's Elijah intercom, `NVDLC01VaultElijahTalkingActivatorScript`):
+/// the lines are then the actor's (their conditions ask `GetIsID` of the
+/// actor's base, their voice files are the actor's voice type's), while
+/// `reference` stays the activator's, where the sound and the view are.
+///
+/// [G] STOPGAP: the setter is traced, how the game uses +0x90 when a
+/// conversation starts is not (nothing here reads `FalloutNV.exe`'s
+/// activation of a talking activator), so the substitution only happens
+/// with `NV_GUESSES=1` ([`crate::guesses`]). Without it, or for any other
+/// base, this is [`Speaker::load`].
+pub fn speaker_for(
+    order: &LoadOrder,
+    state: &GameState,
+    reference: FormId,
+    base: FormId,
+) -> Option<Speaker> {
+    let mut speaker = Speaker::load(order, reference, base)?;
+    if !crate::guesses::enabled() || order.get(base)?.entry.header.kind.as_bytes() != b"TACT" {
+        return Some(speaker);
+    }
+    let Some(actor) = state.more.speakers.get(&base).copied() else {
+        return Some(speaker);
+    };
+    let Some(actor_base) = crate::scripting::base_of(order, actor) else {
+        return Some(speaker);
+    };
+    if let Some(a) = Speaker::load(order, actor, actor_base) {
+        speaker.base = a.base;
+        speaker.voice = a.voice;
+        speaker.race = a.race;
+        speaker.female = a.female;
+        speaker.factions = a.factions;
+        speaker.name = a.name.or(speaker.name);
+    }
+    Some(speaker)
+}
+
 /// Whether a line's conditions pass, said by `speaker` to the player (see
 /// [`crate::scripting::Facts::conditions_pass`]).
 pub fn passes(order: &LoadOrder, info: &Info, speaker: &Speaker, state: &GameState) -> bool {

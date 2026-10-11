@@ -1742,7 +1742,16 @@ fn interactive_from<'a>(
             .get(SCRI)
             .filter(|s| s.data.len() >= 4)
             .map(|s| brr.plugin.to_global(FormId(le_u32(&s.data, 0))));
-        if script.is_none() && !is_item(kind) && kind != CONT && kind != FURN && kind != TERM {
+        // [G] STOPGAP (`NV_GUESSES=1`): a talking activator is usable even with
+        // no script of its own (E on it talks: `dialogue::speaker_for`).
+        let talks = kind.as_bytes() == b"TACT" && crate::guesses::enabled();
+        if script.is_none()
+            && !is_item(kind)
+            && kind != CONT
+            && kind != FURN
+            && kind != TERM
+            && !talks
+        {
             continue;
         }
         let count = record
