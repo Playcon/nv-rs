@@ -71,7 +71,11 @@ impl Line {
             self.show(ui);
             match (self.tile, self.typed) {
                 (Some(tile), Some(typed)) if typed < self.text.len() => {
-                    let mut n = if self.next == 0.0 {
+                    // A rate of 0 (a terminal item's result line) types it all
+                    // at once: `(now - next) / 0` isn't a number of characters.
+                    let mut n = if self.ms <= 0.0 {
+                        self.text.len() - typed
+                    } else if self.next == 0.0 {
                         1
                     } else {
                         ((now - self.next) / self.ms) as usize + 1

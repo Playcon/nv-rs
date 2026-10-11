@@ -985,6 +985,25 @@ mod tests {
         assert!(close.is_some() && leave > close);
     }
 
+    /// An item's result (`RNAM`) is typed beside the prompt in full: the
+    /// result line's rate is 0, which once typed its first character only.
+    #[test]
+    fn an_items_result_is_typed_in_full() {
+        let (mut ui, mut m) = opened(None);
+        let now = run(&mut ui, &mut m, 1.0, 3000.0);
+        let first = m.list.items[0].tile;
+        m.click(&mut ui, -1, Some(first), now);
+        m.used(
+            &mut ui,
+            Used {
+                result: Some("Disconnecting lock.".into()),
+                ..Used::default()
+            },
+        );
+        run(&mut ui, &mut m, now, now + 500.0);
+        assert_eq!(text(&mut ui, &m, RESULT), "Disconnecting lock.");
+    }
+
     /// A sub-menu, then "Back" (`00758a80`).
     #[test]
     fn submenus_and_back() {
