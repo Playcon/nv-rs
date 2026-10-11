@@ -1858,6 +1858,24 @@ pub fn run_scripts(
                     _ => None,
                 }
             }
+            // [G] STOPGAP: a talking activator that a script gave an actor
+            // (`SetTalkingActivatorActor`) and then `Activate`s for itself
+            // (the vault terminal's `VaultMainElijahIntercomREF.Activate
+            // Player 1` runs the intercom's `OnActivate`, whose own `Activate`
+            // names no activator) talks, as E on it does. See
+            // `world::dialogue::speaker_for`.
+            Event::Activate { what, by: None }
+                if world::guesses::enabled()
+                    && world::scripting::base_of(order, what).is_some_and(|b| {
+                        state.more.speakers.contains_key(&b)
+                            && order
+                                .get(b)
+                                .is_some_and(|r| r.entry.header.kind.as_bytes() == b"TACT")
+                    }) =>
+            {
+                talk.0 = Some((what, None, true, false));
+                None
+            }
             Event::Activate { .. } => None,
             // An item's own `ForceTerminalBack` is carried out by the
             // terminal menu (`game_menus::computers`). From another script
