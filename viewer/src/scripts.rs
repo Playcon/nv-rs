@@ -320,6 +320,8 @@ enum Used {
     Notice(String, Option<&'static str>),
     /// A container to open on screen: its reference and name.
     Container(FormId, String),
+    /// A talking activator to talk to ([G] STOPGAP, `NV_GUESSES=1`).
+    Talk(FormId),
     /// A terminal's screen: its record and the placed terminal.
     Terminal(FormId, FormId),
     /// The lockpicking menu, on a locked container.
@@ -447,6 +449,14 @@ fn use_object(
     }
     if r.is_terminal() {
         return Some(Used::Terminal(r.base, r.reference));
+    }
+    // [G] STOPGAP: the player's E on a talking activator, after its own
+    // `OnActivate` (if any) let it through, talks (the script's `Activate`
+    // on itself, as for the Elijah hologram, is the same thing). What the
+    // game's `Activate` of a talking activator does is not traced; see
+    // `world::dialogue::speaker_for`.
+    if r.kind.as_bytes() == b"TACT" && world::guesses::enabled() {
+        return Some(Used::Talk(r.reference));
     }
     None
 }
@@ -1316,6 +1326,11 @@ pub fn run_scripts(
                 }
                 Some(Used::Container(c, name)) => {
                     waiting.push(crate::menus::Menu::Container(c, name));
+                }
+                Some(Used::Talk(who)) => {
+                    if talk.0.is_none() {
+                        talk.0 = Some((who, None, true, false));
+                    }
                 }
                 Some(Used::Terminal(t, r)) => {
                     use crate::game_menus::hacking::{use_terminal, Using};

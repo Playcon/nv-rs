@@ -836,11 +836,13 @@ pub fn talk(
     // GREET procedure (`world::dialogue::activation_says_a_line`); the line
     // is then picked again (`0057b7c0` asks `0061b320` itself), as the menu
     // picks its own. Either way the speech in progress stops (`00934250`).
-    let menu = Speaker::load(order, talker.reference, talker.base).is_none_or(|speaker| {
-        state.0.roll();
-        dialogue::pick(order, GREETING, &speaker, &state.0)
-            .is_none_or(|info| !dialogue::activation_says_a_line(&info))
-    });
+    let menu = dialogue::speaker_for(order, &state.0, talker.reference, talker.base).is_none_or(
+        |speaker| {
+            state.0.roll();
+            dialogue::pick(order, GREETING, &speaker, &state.0)
+                .is_none_or(|info| !dialogue::activation_says_a_line(&info))
+        },
+    );
     crate::chatter::hush(&mut commands, &mut lines, talker.reference);
     if !menu {
         println!(
@@ -882,7 +884,7 @@ fn start_talk(
     now: f32,
     menu: bool,
 ) -> Option<Talk> {
-    let speaker = Speaker::load(order, talker.reference, talker.base)?;
+    let speaker = dialogue::speaker_for(order, state, talker.reference, talker.base)?;
     // A fresh draw for a run of random lines (`dialogue::choose`).
     state.roll();
     let Some(info) = dialogue::pick(order, topic, &speaker, state) else {

@@ -55,5 +55,26 @@ fn with_guesses_on_teammates_follow_and_people_on_their_feet_animate() {
         0.0
     );
 
+    // A talking activator a script gave an actor to speak as (the vault's
+    // Elijah intercom): the lines are the actor's, the reference stays the
+    // activator's; its own speaker before the script ran and with the
+    // switch off.
+    let talker = FormId(TALKER_REF);
+    let own = world::dialogue::speaker_for(&order, &state, talker, FormId(TALKER)).unwrap();
+    assert_eq!(own.base, FormId(TALKER));
+    Runner::new(&order, &scripts, &mut state).run_source(
+        "TalkerRef.SetTalkingActivatorActor PersonRef",
+        None,
+        None,
+    );
+    let through = world::dialogue::speaker_for(&order, &state, talker, FormId(TALKER)).unwrap();
+    assert_eq!(through.reference, talker);
+    assert_eq!(through.base, FormId(PERSON));
+    // A person's own speaker is never changed.
+    let person = world::dialogue::speaker_for(&order, &state, who, FormId(PERSON)).unwrap();
+    assert_eq!((person.reference, person.base), (who, FormId(PERSON)));
+
     world::guesses::set(false);
+    let off = world::dialogue::speaker_for(&order, &state, talker, FormId(TALKER)).unwrap();
+    assert_eq!(off.base, FormId(TALKER));
 }

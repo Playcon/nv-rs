@@ -917,6 +917,26 @@ something in a script very Bad"; no script in the base game or Dead Money does t
 `claude/viewer-use-flag`, from main). Used for the scene above, after `--run` lines that set MQ01c's
 stages and the speakers' flags.
 
+### Stopgap: a talking activator that speaks as an actor (the vault's Elijah intercom)
+
+`NVDLC01VaultElijahTalkingActivatorScript` (the intercom by the vault elevator,
+`0200CEE4`) runs `SetTalkingActivatorActor NVDLC01ElijahREF` and then `Activate`.
+The finale's lines (greeting `02011216`, the persuasion replies) are written for
+the NPC Elijah: their conditions ask `GetIsID NVDLC01Elijah`, and their voice files
+are Elijah's. nv-rs stored the substitute actor (`more_functions.speakers`, the
+setter is traced: `005d4cc0` -> `004ff0e0`, the base's +0x90) but nothing used it
+when a conversation started, and the player's E on a talking activator opened
+nothing, so the intercom (and about 20 Elijah topics) could not be played.
+
+**Behind `NV_GUESSES=1` [G]** (how the game's `Activate` of a talking activator uses
++0x90 is not traced): `world::dialogue::speaker_for` gives the activator the
+actor's base, voice, race, sex and factions for choosing and conditioning lines
+(its reference stays the activator's, where the sound and the view are), and the
+player's E on a talking activator (with or without a script of its own, after any
+`OnActivate` let it through) starts the conversation. Test:
+`contrib_guesses` (the speaker before the script, after it, a person's own, and
+with the switch off). Not seen running yet in the viewer.
+
 ## Open questions
 
 * Which DLCs are installed in the maintainer's Data folder (the data pass's `info`)?
