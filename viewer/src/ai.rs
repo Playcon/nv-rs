@@ -988,7 +988,11 @@ pub fn move_actors(
                 }
             }
         }
+        let stuck_here = walker.stuck_at;
         unstick(walker, &mut nav.mesh, &mut paths, &moves.settings, now);
+        if let (Some(at), true) = (stuck_here, world::guesses::enabled()) {
+            open_door_in_the_way(order, state, &mut sounds, &swing_doors, me, at);
+        }
         let mut ask = Asking {
             queue: &mut paths,
             mesh: nav.mesh.clone(),
@@ -4274,6 +4278,43 @@ pub(crate) fn move_body(
             && feet[2] < p.feet[2] + p.height
             && p.feet[2] < feet[2] + shape.height
     });
+}
+
+/// [G] STOPGAP (`NV_GUESSES=1`): someone whose walk got stuck against a
+/// shut, unlocked door opens it. The game's path following opens the doors
+/// across a path (`009e20c0`, [`crate::doors::walker_at_door`]), but the
+/// navmesh here only marks swing doors that aren't sliding
+/// ([`sync_nav`]), so a path through a sliding door (the Sierra Madre
+/// vault's two entry doors, flag 0x10, which `NVDLC01VaultCodeHolderScript`
+/// only ever closes) lists no door to open and the walker stands at it
+/// stuck. How the original gets someone through a sliding door is not
+/// traced; this opens the nearest shut door within a doorway's reach of
+/// where they stuck.
+fn open_door_in_the_way(
+    order: &esm::LoadOrder,
+    state: &mut world::scripting::GameState,
+    sounds: &mut crate::sounds::SoundRequests,
+    doors: &crate::doors::SwingDoors,
+    walker: FormId,
+    at: [f32; 3],
+) {
+    let nearest = doors
+        .doors
+        .values()
+        .filter(|d| {
+            world::doors::open_state(order, state, d.reference) == world::doors::OpenState::Closed
+                && world::locks::lock_now(order, state, d.reference).is_none()
+        })
+        .filter_map(|d| {
+            let (_, _, p, _) = state.place(order, d.reference)?;
+            let across = (p[0] - at[0]).hypot(p[1] - at[1]);
+            ((p[2] - at[2]).abs() < 160.0 && across < 160.0).then_some((d.reference, across))
+        })
+        .min_by(|a, b| a.1.total_cmp(&b.1));
+    if let Some((door, _)) = nearest {
+        println!("{walker} is stuck against the shut door {door}: opened for them ([G]).");
+        crate::doors::activate(order, state, sounds, door, Some(walker));
+    }
 }
 
 /// Someone whose walk got stuck (`009e4cf0`): the triangle they stand on
