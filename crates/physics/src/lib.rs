@@ -562,9 +562,13 @@ impl Collider {
         self.cast(origin, direction, max, false, Some(layer))
     }
 
-    /// The Havok layer a triangle's body is on ([`ANY_LAYER`]: not given).
+    /// The Havok layer a triangle's body is on ([`ANY_LAYER`]: not given,
+    /// also for an index this collider has no triangle for: a contact kept
+    /// from before the collision was rebuilt smaller, as when squares unload).
     pub fn layer(&self, index: u32) -> u8 {
-        self.triangles[index as usize].layer
+        self.triangles
+            .get(index as usize)
+            .map_or(ANY_LAYER, |t| t.layer)
     }
 
     /// [`Collider::raycast`], also meeting switched-off objects (an open
@@ -2075,6 +2079,9 @@ mod tests {
         let (d, t) = c.raycast_layer([0.0, 0.0, 50.0], north, 500.0, 6).unwrap();
         assert!((d - 200.0).abs() < 1e-3 && c.owner(t) == 0x32, "{d}");
         assert_eq!(c.layer(t), 1);
+        // An index the collider has no triangle for (a contact kept from a
+        // larger collider) has no layer rather than panicking.
+        assert_eq!(c.layer(1_000_000), ANY_LAYER);
         // Triangles added without a layer stop every cast.
         let mut plain = Collider::new();
         plain.add(&plane(100.0), &quad);
