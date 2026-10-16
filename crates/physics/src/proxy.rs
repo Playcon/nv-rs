@@ -170,6 +170,19 @@ impl Proxy {
         }
     }
 
+    /// Drops the manifold points whose body `collider` no longer has: the
+    /// manifold is kept between updates, and the collision is rebuilt when
+    /// squares load and unload or a door moves, so a triangle or person
+    /// number from before may be past the end of the new lists (the layer and
+    /// owner lookups then panicked).
+    pub fn forget_missing_bodies(&mut self, collider: &Collider) {
+        let (triangles, people) = (collider.triangle_count(), collider.people().len());
+        self.manifold.retain(|p| match p.body {
+            Body::Triangle(t) => (t as usize) < triangles,
+            Body::Person(i) => (i as usize) < people,
+        });
+    }
+
     /// The manifold point most like `p` within 0.1 ([`surface_distance`]),
     /// if any (`00cacf10`, Xbox PDB `hkpCharacterProxy::findSurface`).
     pub fn find_surface(&self, p: &RootCdPoint) -> Option<usize> {
@@ -375,6 +388,7 @@ impl Proxy {
         dt: f32,
         listener: &mut dyn Listener,
     ) {
+        self.forget_missing_bodies(collider);
         let s = self.settings;
         let query = Query {
             collider,
@@ -503,4 +517,39 @@ fn sort_hits(hits: &mut [RootCdPoint]) {
 fn to_game(q: &Query, mut p: RootCdPoint) -> RootCdPoint {
     p.position = add(q.origin, scale(p.position, HAVOK_UNIT));
     p
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn point(body: Body) -> RootCdPoint {
+        RootCdPoint {
+            position: [0.0; 3],
+            fraction: 0.0,
+            normal: [0.0, 0.0, 1.0],
+            distance: 0.0,
+            body,
+        }
+    }
+
+    /// A manifold kept from a larger collider loses the points whose body
+    /// the new one lacks, and keeps the rest.
+    #[test]
+    fn contacts_with_bodies_the_collider_lacks_are_forgotten() {
+        let mut collider = Collider::new();
+        collider.add(
+            &[[0.0, 0.0, 0.0], [100.0, 0.0, 0.0], [0.0, 100.0, 0.0]],
+            &[[0, 1, 2]],
+        );
+        let mut proxy = Proxy::new(ProxySettings::GAME);
+        proxy.manifold = vec![
+            point(Body::Triangle(0)),
+            point(Body::Triangle(149_544)),
+            point(Body::Person(3)),
+        ];
+        proxy.forget_missing_bodies(&collider);
+        assert_eq!(proxy.manifold.len(), 1);
+        assert_eq!(proxy.manifold[0].body, Body::Triangle(0));
+    }
 }
