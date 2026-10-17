@@ -12,8 +12,10 @@
 //! evaluated on one [`FrameState`] ([`ThisFrame`]) filled once per frame
 //! by [`begin_frame`], the first system of the first stage.
 //!
-//! Two sets run ahead of the stages and one after them
-//! ([`ViewerSet`]); see there for what they hold and why.
+//! Two sets run ahead of the stages and one after them ([`ViewerSet`]);
+//! see there for what they hold and why. The menus run at the interface
+//! idle ([`IdleSet`]), after the controls' poll (step 33, [`poll_set`],
+//! `crate::poll`), which the player's step reads a frame later.
 //!
 //! The player's step (`Main::OnIdle_UpdatePlayer`, step 14) is split
 //! further into its calls and `PlayerCharacter::Update`'s sub-steps
@@ -36,6 +38,7 @@
 
 use bevy::prelude::*;
 use world::frame::ai_stage::{self, AiState};
+use world::frame::interface::{self, InterfaceState};
 use world::frame::player::{self, PlayerState, UPDATE, UPDATE_PLAYER};
 use world::frame::world_time::{self, WorldState, FUNCTIONS};
 use world::frame::{self, FrameState, Stage, STEPS};
@@ -48,6 +51,27 @@ pub enum FrameSet {
     /// One of its steps (an index into `world::frame::STEPS`).
     Step(usize),
 }
+
+/// Interface/render sub-steps with a unique main-thread caller. The idle's
+/// three alternative callers remain modelled in core; the viewer's menus
+/// run at one of them ([`IdleSet`]).
+#[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct InterfaceSet(pub u32, pub usize);
+
+impl InterfaceSet {
+    pub fn at(function: u32, site: u32) -> Self {
+        let f = interface::function(function).expect("interface function");
+        Self(
+            function,
+            interface::step_at(f, site).expect("interface sub-step"),
+        )
+    }
+}
+
+/// Only frame-derived inputs drive wired systems. Unavailable manager,
+/// renderer and input state remains model-only; no system uses those gates.
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct ThisInterface(pub InterfaceState);
 
 impl FrameSet {
     /// The set of the first step that calls `address`.
@@ -71,7 +95,12 @@ pub const TREE_MANAGER_UPDATE: u32 = 0x0066_52e0;
 /// Viewer work outside the frame's stages.
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ViewerSet {
-    /// First: putting a newly loaded interior or exterior on screen and
+    /// First: the controls' buffer put back as the last frame left it, this
+    /// frame's device read (Bevy's `PreUpdate`) kept for the poll at step 33
+    /// (`crate::poll`, `world::frame::input`). Not a call of the exe's: the
+    /// buffer simply keeps its contents between frames there.
+    Input,
+    /// Then: putting a newly loaded interior or exterior on screen and
     /// streaming the land around the player. In the exe, loading belongs to
     /// the frame (`TES::ShowLoadingMenu`, step 39; the grid cells' attach
     /// in `Main::OnIdle_UpdateCurrentGridCell`, step 78), but the viewer's
@@ -79,28 +108,33 @@ pub enum ViewerSet {
     /// a scene being installed at the start of the frame (a door or a
     /// script's `MoveTo` asks for it one frame, it is in place the next).
     Loading,
-    /// Then the interface: the game's menus, the viewer's own menus,
-    /// V.A.T.S. and the lockpicking menu, which take Bevy's input
-    /// (`reset_all`) before the player's systems read it. In the exe this is
-    /// `Interface::Idle` (through `Main::OnIdle_DoInterfaceIdle`), in stage 5
-    /// with one thread or on the AI thread in stage 6; the player's update
-    /// (stage 2) reads the controls `Main::OnIdle_PollControls` polled in the
-    /// previous frame (step 33), after that frame's interface idle, so there
-    /// too the interface meets the input before the player does. The
-    /// player's update now stops in menu mode ([`PlayerSet`], PR 4), but
-    /// the player systems ordered outside its gates (`view_input`, the
-    /// mouse look) still read the input the menus clear, so it stays here
-    /// until PR 7.
-    Interface,
     /// Last: what is not in `Main::OnIdle`, the viewer's own tools
     /// (screenshots, help, the cursor, exposure, the F12 report, the frame
     /// rate, the window's focus, the present mode, the console key's switch
     /// to its free camera, billboards turned to Bevy's camera); and output
     /// whose place in the frame isn't traced, which only needs the frame's
-    /// work done (the GPU's grass and water around the camera, sounds, music
-    /// and the radio played).
+    /// work done (the GPU's grass and water around the camera).
     AfterFrame,
 }
+
+/// The interface idle's menus (`Interface::Idle`, `0070c4a0` through
+/// `Main::OnIdle_DoInterfaceIdle`): the game's menus, the viewer's own
+/// menus, V.A.T.S. and the lockpicking menu, which take the controls'
+/// buffer (`reset_all`, as the exe's interface clears its keystrokes) after
+/// the poll (step 33) has put this frame's input in, and so before the
+/// player's step reads it in the next frame (`world::frame::input`,
+/// docs/FRAME_SKELETON.md "PR 8 result").
+///
+/// Placed at the AI linear task threads' first call (`008c7be9` or
+/// `008c7db9`, [`AiSet::Call`] of [`INTERFACE_IDLE`]), outside its gate, as
+/// the HUD and the Pip-Boy's screen are (which follow it): that is where the
+/// exe calls the idle when the AI work runs. With a thread count of 1
+/// (which `main`'s raise to 2 keeps from happening) it is step 80's place.
+/// Open: without the AI work (menu mode) the exe calls it at step 105,
+/// after `Main::OnIdle_UpdateAnimationsAndEffects`; that is after the poll
+/// too, but the viewer doesn't move the set there.
+#[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IdleSet;
 
 /// The player stage as system sets (`world::frame::player`, Phase 1 PR 4):
 /// inside step 14's set (`Main::OnIdle_UpdatePlayer`, `0086f940`) each of
@@ -320,6 +354,7 @@ pub const WAIT_FOR_THREADS: u32 = ai_stage::WAIT_FOR_THREADS;
 /// `Main::PostSwapProcess` (stage 7), whose `Main::OnIdle_UpdateProcessLists`
 /// (`0086f890`) runs `ProcessLists::UpdateProcessLists` (`0096d810`): the
 /// lower process levels' moves (`0096b810`, `0096b470`, `0096b050`).
+#[cfg(test)]
 pub const POST_SWAP_PROCESS: u32 = 0x0087_05d0;
 /// `Main::OnIdle_UpdateAnimationsAndEffects` (stage 6, after the threads
 /// start).
@@ -481,12 +516,14 @@ pub fn viewer_frame_state(v: FrameInputs) -> FrameState {
 #[allow(clippy::too_many_arguments)]
 pub fn begin_frame(
     keys: Res<ButtonInput<KeyCode>>,
+    buffer: Option<Res<crate::poll::ControlsBuffer>>,
     menus: Res<crate::menus::Menus>,
     conversation: Res<crate::dialogue::Conversation>,
     vats: Option<Res<crate::vats::Vats>>,
     draw: Res<crate::game_menus::MenuDraw>,
     walker: Res<crate::walk::Player>,
     exterior: Option<Res<crate::exterior::Exterior>>,
+    mut this_interface: ResMut<ThisInterface>,
     (mut this, mut this_player, mut this_world, mut this_ai): (
         ResMut<ThisFrame>,
         ResMut<ThisPlayer>,
@@ -496,6 +533,12 @@ pub fn begin_frame(
 ) {
     let vats_mode = vats.as_ref().map_or(0, |v| v.manager_mode());
     let in_dialogue = conversation.0.as_ref().is_some_and(|t| !t.is_line_only());
+    // `GetAsyncKeyState` reads the keyboard itself, not the controls'
+    // buffer: this frame's device read (`world::frame::input::DEVICE_READS`).
+    let keys = buffer
+        .as_deref()
+        .and_then(crate::poll::ControlsBuffer::device_keys)
+        .unwrap_or(&keys);
     this.0 = viewer_frame_state(FrameInputs {
         alt_tab_held: keys.pressed(KeyCode::Tab)
             && (keys.pressed(KeyCode::AltLeft) || keys.pressed(KeyCode::AltRight)),
@@ -506,6 +549,7 @@ pub fn begin_frame(
     this_player.0 = viewer_player_state(&this.0, walker.walking, in_dialogue);
     this_world.0 = viewer_world_state(&this.0, exterior.is_none());
     this_ai.0 = viewer_ai_state(&this.0, in_dialogue, exterior.is_none());
+    this_interface.0 = interface::from_frame(&this.0, in_dialogue);
 }
 
 /// Configures the sets in `Update`: the viewer's two sets ahead, the
@@ -523,8 +567,8 @@ pub fn configure_with(app: &mut App, threads: i32) {
     app.configure_sets(
         Update,
         (
+            ViewerSet::Input,
             ViewerSet::Loading,
-            ViewerSet::Interface,
             FrameSet::Stage(stages[0]),
         )
             .chain(),
@@ -560,6 +604,81 @@ pub fn configure_with(app: &mut App, threads: i32) {
     configure_player(app);
     configure_world(app);
     configure_ai(app, threads);
+    configure_interface(app);
+    // The menus at the interface idle, after the controls' poll: the AI
+    // threads' first call; with one thread (no threads, which `main`'s
+    // raise to 2 keeps the viewer from) step 80's place.
+    if ai_call_sets(threads)
+        .iter()
+        .any(|s| s.0 == AiSet::Call(INTERFACE_IDLE))
+    {
+        app.configure_sets(
+            Update,
+            IdleSet
+                .in_set(FrameSet::Stage(Stage::AiStart))
+                .after(AiSet::Call(INTERFACE_IDLE))
+                .before(AiSet::next_with(INTERFACE_IDLE, threads)),
+        );
+    } else {
+        let i = frame::step_of(interface::DO_INTERFACE_IDLE).expect("step 80");
+        app.configure_sets(
+            Update,
+            IdleSet
+                .in_set(FrameSet::Stage(STEPS[i].stage))
+                .after(FrameSet::Step(i - 1))
+                .before(FrameSet::Step(i + 1)),
+        );
+    }
+}
+
+/// The controls' poll's set: `Controls::Poll`'s sub-step of
+/// `Main::OnIdle_PollControls` (step 33, `world::frame::input`).
+pub fn poll_set() -> InterfaceSet {
+    InterfaceSet::at(
+        world::frame::input::POLL_CONTROLS,
+        world::frame::input::CONTROLS_POLL_SITE,
+    )
+}
+
+/// The unique main-thread calls, and their children, in executable order.
+/// Multiple-caller functions (the idle and menu background) are deliberately
+/// excluded: selecting their first call would silently lose the fallback path.
+fn configure_interface(app: &mut App) {
+    app.init_resource::<ThisInterface>();
+    let mut configured = Vec::new();
+    for f in &interface::FUNCTIONS {
+        if f.callers.len() != 1 {
+            continue;
+        }
+        let caller = f.callers[0];
+        let frame_parent =
+            (caller.function == interface::ON_IDLE).then(|| FrameSet::step(f.address));
+        let interface_parent = configured
+            .contains(&caller.function)
+            .then(|| InterfaceSet::at(caller.function, caller.site));
+        if frame_parent.is_none() && interface_parent.is_none() {
+            continue;
+        }
+        configured.push(f.address);
+        for i in 0..f.steps.len() {
+            let address = f.address;
+            let set = InterfaceSet(address, i);
+            if let Some(parent) = frame_parent {
+                app.configure_sets(Update, set.in_set(parent));
+            } else if let Some(parent) = interface_parent {
+                app.configure_sets(Update, set.in_set(parent));
+            }
+            app.configure_sets(
+                Update,
+                set.run_if(move |this: Res<ThisInterface>| {
+                    interface::step_runs(&this.0, interface::function(address).unwrap(), i)
+                }),
+            );
+            if i + 1 < f.steps.len() {
+                app.configure_sets(Update, set.before(InterfaceSet(address, i + 1)));
+            }
+        }
+    }
 }
 
 /// The AI stage's sets ([`AiSet`]) for a thread count: the threads' calls
@@ -793,16 +912,60 @@ pub struct FrameOrderPlugin;
 impl Plugin for FrameOrderPlugin {
     fn build(&self, app: &mut App) {
         configure(app);
+        crate::poll::add(app);
         app.add_systems(
             Update,
             begin_frame.in_set(FrameSet::Stage(Stage::FrameStart)),
-        );
+        )
+        // The controls' buffer: the last frame's poll back first, this
+        // frame's at `Controls::Poll` (step 33).
+        .add_systems(Update, crate::poll::hold_last_poll.in_set(ViewerSet::Input))
+        .add_systems(Update, crate::poll::poll_controls.in_set(poll_set()));
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn post_swap_audio_precedes_process_lists_and_menu_holds_moves() {
+        for threads in [1, 2, 8] {
+            for menu in [false, true] {
+                let mut app = App::new();
+                configure_with(&mut app, threads);
+                app.init_resource::<Ran>();
+                let frame = FrameState {
+                    threads,
+                    in_menu_mode: menu,
+                    ..FrameState::default()
+                };
+                app.insert_resource(ThisFrame(frame));
+                app.insert_resource(ThisInterface(interface::from_frame(&frame, false)));
+                // Reverse registration proves set order, including the nested
+                // audio/process-list boundary, rather than insertion order.
+                for (label, function, site) in [
+                    ("moves", interface::UPDATE_PROCESS_LISTS, 0x0086_f905),
+                    ("music", interface::AUDIO_UPDATE, 0x0086_f65f),
+                    ("radio", interface::AUDIO_UPDATE, 0x0086_f657),
+                    ("sounds", interface::AUDIO_UPDATE, 0x0086_f650),
+                ] {
+                    app.add_systems(Update, note(label).in_set(InterfaceSet::at(function, site)));
+                }
+                app.update();
+                let want = if menu {
+                    vec!["sounds", "radio", "music"]
+                } else {
+                    vec!["sounds", "radio", "music", "moves"]
+                };
+                assert_eq!(
+                    app.world().resource::<Ran>().0,
+                    want,
+                    "threads={threads} menu={menu}"
+                );
+            }
+        }
+    }
 
     /// What ran, in order.
     #[derive(Resource, Default)]
@@ -848,10 +1011,10 @@ mod tests {
                 note(stage_name(stage)).in_set(FrameSet::Stage(stage)),
             );
         }
-        app.add_systems(Update, note("Interface").in_set(ViewerSet::Interface))
-            .add_systems(Update, note("Loading").in_set(ViewerSet::Loading));
+        app.add_systems(Update, note("Loading").in_set(ViewerSet::Loading))
+            .add_systems(Update, note("Input").in_set(ViewerSet::Input));
         app.update();
-        let mut want = vec!["Loading", "Interface"];
+        let mut want = vec!["Input", "Loading"];
         want.extend(frame::stages().into_iter().map(stage_name));
         want.push("AfterFrame");
         assert_eq!(app.world().resource::<Ran>().0, want);
@@ -1377,6 +1540,105 @@ mod tests {
         assert_eq!(
             AiSet::prev_with(ACTORS_MOVEMENT, threads),
             AiSet::Call(0x0096_c330)
+        );
+    }
+
+    /// The controls' poll (step 33, `Controls::Poll`'s sub-step) comes after
+    /// the player's step and before the menus at the interface idle, with
+    /// the HUD after them, for both thread counts and in menu mode too
+    /// (`world::frame::input`: the player reads the previous poll, the
+    /// interface this frame's).
+    #[test]
+    fn the_poll_sits_between_the_player_and_the_menus() {
+        use world::frame::input::{poll_seen, Poll, Reader};
+        for threads in [2, 8] {
+            for menu_up in [false, true] {
+                let state = viewer_frame_state(FrameInputs {
+                    menu_up,
+                    ..FrameInputs::default()
+                });
+                let mut app = ai_app(state, threads, false);
+                app.add_systems(
+                    Update,
+                    note("hud")
+                        .in_set(FrameSet::Stage(Stage::AiStart))
+                        .after(IdleSet)
+                        .before(AiSet::next_with(INTERFACE_IDLE, threads)),
+                )
+                .add_systems(Update, note("menus").in_set(IdleSet))
+                .add_systems(Update, note("poll").in_set(poll_set()))
+                .add_systems(
+                    Update,
+                    note("player").in_set(FrameSet::step(UPDATE_PLAYER_STEP)),
+                )
+                .add_systems(Update, note("input").in_set(ViewerSet::Input));
+                app.update();
+                assert_eq!(
+                    app.world().resource::<Ran>().0,
+                    ["input", "player", "poll", "menus", "hud"]
+                );
+                let frame = app.world().resource::<ThisFrame>().0;
+                assert_eq!(poll_seen(Reader::Player, &frame), Some(Poll::Previous));
+                assert_eq!(poll_seen(Reader::InterfaceIdle, &frame), Some(Poll::This));
+            }
+        }
+    }
+
+    /// With the buffer's systems in their sets, a key pressed in one frame
+    /// reaches the menus in that frame and the player's step in the next;
+    /// a key the menus take never reaches the player.
+    #[test]
+    fn a_press_reaches_the_menus_then_the_player() {
+        use bevy::input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll};
+
+        #[derive(Resource, Default)]
+        struct Seen(Vec<(&'static str, bool)>);
+        #[derive(Resource)]
+        struct MenusTake(bool);
+        fn see(who: &'static str) -> impl FnMut(Res<ButtonInput<KeyCode>>, ResMut<Seen>) {
+            move |keys, mut seen| seen.0.push((who, keys.just_pressed(KeyCode::KeyE)))
+        }
+        fn menus(take: Res<MenusTake>, mut keys: ResMut<ButtonInput<KeyCode>>) {
+            if take.0 {
+                keys.reset_all();
+            }
+        }
+
+        let mut app = ai_app(FrameState::default(), thread_count(), false);
+        app.init_resource::<ButtonInput<KeyCode>>()
+            .init_resource::<ButtonInput<MouseButton>>()
+            .init_resource::<AccumulatedMouseMotion>()
+            .init_resource::<AccumulatedMouseScroll>()
+            .init_resource::<Seen>()
+            .insert_resource(MenusTake(false));
+        crate::poll::add(&mut app);
+        app.add_systems(Update, (see("menus"), menus).chain().in_set(IdleSet))
+            .add_systems(
+                Update,
+                see("player").in_set(FrameSet::step(UPDATE_PLAYER_STEP)),
+            )
+            .add_systems(Update, crate::poll::poll_controls.in_set(poll_set()))
+            .add_systems(Update, crate::poll::hold_last_poll.in_set(ViewerSet::Input));
+        let frame = |app: &mut App, press: bool| {
+            app.world_mut().resource_mut::<Seen>().0.clear();
+            let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+            keys.clear();
+            if press {
+                keys.press(KeyCode::KeyE);
+            } else {
+                keys.release(KeyCode::KeyE);
+            }
+            app.update();
+            app.world().resource::<Seen>().0.clone()
+        };
+        assert_eq!(frame(&mut app, true), [("player", false), ("menus", true)]);
+        assert_eq!(frame(&mut app, false), [("player", true), ("menus", false)]);
+        app.insert_resource(MenusTake(true));
+        assert_eq!(frame(&mut app, true), [("player", false), ("menus", true)]);
+        app.insert_resource(MenusTake(false));
+        assert_eq!(
+            frame(&mut app, false),
+            [("player", false), ("menus", false)]
         );
     }
 }

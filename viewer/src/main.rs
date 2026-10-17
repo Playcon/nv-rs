@@ -53,6 +53,7 @@ mod pipboy;
 mod player_body;
 mod player_camera;
 mod player_idle;
+mod poll;
 mod present;
 mod radio;
 mod rendered_terminal;
@@ -157,6 +158,18 @@ fn main() {
             std::process::exit(1);
         }
     };
+    // The game's own code (`crates/engine`) runs on the player's
+    // FalloutNV.exe, read from the same installation as Data: any build but
+    // 1.4.0.525 is refused here, with the reason (the maintainer's decision,
+    // 2026-10-13). Started now, it doesn't run anything yet.
+    let game_code = match host::Host::start(&data) {
+        Ok(host) => host,
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(1);
+        }
+    };
+    println!("{}", game_code.describe());
     println!("Loading {} from {} ...", args.cell, data.display());
     let started = std::time::Instant::now();
     let game = match Game::open(&data, &args.options) {
@@ -166,6 +179,14 @@ fn main() {
             std::process::exit(1);
         }
     };
+    // Which quests the game's own interpreter runs (`host::quest_vm`):
+    // command-free quests and those whose only function is GetSecondsPassed.
+    let (taken, scripted) =
+        host::quest_vm::eligible(&game.order, &world::scripting::ScriptCache::default());
+    println!(
+        "Game's interpreter: runs {taken} of {scripted} scripted quests (the rest through \
+         crates/script)."
+    );
     // `--load-fos`: an original save gives the state and the place.
     let mut from_save = match args.load_fos.as_deref().map(|p| fos_start::open(&game, p)) {
         Some(Ok(start)) => Some(start),
@@ -276,6 +297,8 @@ fn main() {
             ..default()
         })
         .insert_resource(dialogue::DialogueState(state))
+        // Main thread only: the engine is not `Send` (`host`).
+        .insert_non_send_resource(game_code)
         .insert_resource(sitting::Seats::new(&game.order))
         .init_resource::<sitting::PlayerSeat>()
         .insert_resource(faces::Faces::new(&game))
@@ -492,10 +515,12 @@ fn main() {
                 .chain()
                 .in_set(ViewerSet::Loading),
         )
-        // Then the interface (`ViewerSet::Interface`, which says why it is
-        // ahead of the stages). Menus take the keyboard before anything
-        // else sees it. V.A.T.S. takes them next while it's on, and the
-        // lockpicking menu (keyboard and mouse) while it's open.
+        // The interface idle's menus (`frame_order::IdleSet`, in stage 6
+        // after the controls' poll, step 33): they take this frame's input
+        // before the player's step reads it in the next frame
+        // (`world::frame::input`). The viewer's menus take the keyboard;
+        // V.A.T.S. takes it next while it's on, and the lockpicking menu
+        // (keyboard and mouse) while it's open.
         .add_systems(
             Update,
             (
@@ -506,7 +531,7 @@ fn main() {
             )
                 // Kept: which of them takes the input first.
                 .chain()
-                .in_set(ViewerSet::Interface),
+                .in_set(frame_order::IdleSet),
         )
         // Stage 2, the player (`Main::OnIdle_UpdatePlayer`, `0086f940`, step
         // 14): its calls and `PlayerCharacter::Update`'s sub-steps are sets
@@ -871,12 +896,21 @@ fn main() {
         // calls `Main::OnIdle_UpdateProcessLists` (`0086f890`), whose
         // `ProcessLists::UpdateProcessLists` (`0096d810`) moves the lower
         // process levels (`0096b810`, `0096b470`, `0096b050`, the passes
-        // `move_offstage` follows). In that step, whose own calls aren't
-        // modelled yet (Phase 1 PR 7); `move_offstage` holds still in the
-        // dialogue menu itself.
+        // `move_offstage` follows). At its sub-step under the process-list
+        // gate, after the sound, radio and music updates (Phase 1 PR 7).
         .add_systems(
             Update,
-            ai::move_offstage.in_set(FrameSet::step(frame_order::POST_SWAP_PROCESS)),
+            ai::move_offstage.in_set(frame_order::InterfaceSet::at(
+                world::frame::interface::UPDATE_PROCESS_LISTS,
+                0x0086_f905,
+            )),
+        )
+        .add_systems(
+            Update,
+            sounds::play_sounds.in_set(frame_order::InterfaceSet::at(
+                world::frame::interface::AUDIO_UPDATE,
+                0x0086_f650,
+            )),
         )
         // After the frame (`ViewerSet::AfterFrame`): the viewer's tools and
         // output. Billboards turn to the camera once it has moved; the
@@ -891,7 +925,6 @@ fn main() {
                 update_help,
                 grab_cursor,
                 report::report_key,
-                sounds::play_sounds,
                 face_camera,
                 report_fps,
             )

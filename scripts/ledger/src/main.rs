@@ -12,6 +12,10 @@
 //! - `translated`: an address in it is cited on a translation marker line
 //!   (ADR-0003: `Translated from <addr>` or `(decompiled, FalloutNV.exe ...)`;
 //!   when the marker line itself holds no address, the line above counts).
+//! - `static init (table)`: a static initializer, or an `atexit` destructor,
+//!   run from a generated table (`crates/engine/data/static_initializers.tsv`,
+//!   `crates/engine/data/atexit_destructors.tsv`; research/initgen): engine
+//!   coverage, but not a hand translation.
 //! - `traced`: an address in it is cited anywhere else in Rust.
 //! - `platform` / `library`: its subsystem is replaced by Rust/Bevy, or is
 //!   compiler or runtime-library code (`base_status`).
@@ -40,8 +44,8 @@ const TEXT: (u32, u32) = (0x0040_1000, 0x00fd_e600);
 /// `library`: compiler-generated code and the C/C++ runtime and zlib.
 /// `platform`: replaced by Rust/Bevy (docs/ENGINE_PORT_PLAN.md, "Which
 /// parts get translated"): the renderer and shader layer, the Xbox/DirectX
-/// libraries, system, file, thread and device layers, movie playback,
-/// SpeedTree rendering and the debug transport.
+/// libraries, system, file, thread and device layers, movie playback and
+/// the debug transport, except the units in [`LOGIC_UNITS`].
 fn base_status(subsystem: &str) -> &'static str {
     match subsystem {
         "compiler: static init/exit" | "LIBCMT" | "libcpmt" | "OLDNAMES" | "zLib" => "library",
@@ -64,7 +68,6 @@ fn base_status(subsystem: &str) -> &'static str {
         | "BSSystemUtilities"
         | "BSDevices"
         | "BSMovie"
-        | "SpeedTree"
         | "RemoteLog"
         | "BSDiag"
         | "fallout shared/steam" => "platform",
@@ -72,7 +75,65 @@ fn base_status(subsystem: &str) -> &'static str {
     }
 }
 
-const STATUSES: [&str; 5] = ["translated", "traced", "platform", "library", "open"];
+/// Units inside platform subsystems that are game logic rather than drawing or
+/// OS calls, so they are translated like game code: scene-graph node types
+/// (fade, ordered and shadow-scene nodes, scene lights), the shader *property*
+/// objects and texture sets that models load and save, the shader manager's
+/// state, the image-space manager and its parameters (which effects run, from
+/// game state), the blood splatter timers, archive lookup and the file layer
+/// above the OS reads (which file wins), and D3DX's maths. SpeedTree is not a
+/// platform subsystem at all: its tree building, splines, random numbers and
+/// wind are maths that decide every tree's shape. Only the last step of each
+/// (handing data to the GPU or the OS) is a platform stand-in.
+const LOGIC_UNITS: &[&str] = &[
+    "BSShader/bsfadenode.cpp",
+    "BSShader/bsfadenodeculler.cpp",
+    "BSShader/bsorderednode.cpp",
+    "BSShader/shadowscenenode.cpp",
+    "BSShader/shadowscenelight.cpp",
+    "BSShader/bsshaderproperty.cpp",
+    "BSShader/bsshaderlightingproperty.cpp",
+    "BSShader/bsshaderpplightingproperty.cpp",
+    "BSShader/bsshadernolightingproperty.cpp",
+    "BSShader/bsshaderbloodsplatterproperty.cpp",
+    "BSShader/bsdistanttreeshaderproperty.cpp",
+    "BSShader/distantlodshaderproperty.cpp",
+    "BSShader/geometrydecalshaderproperty.cpp",
+    "BSShader/hairshaderproperty.cpp",
+    "BSShader/particleshaderproperty.cpp",
+    "BSShader/skyshaderproperty.cpp",
+    "BSShader/tallgrassshaderproperty.cpp",
+    "BSShader/tileshaderproperty.cpp",
+    "BSShader/watershaderproperty.cpp",
+    "BSShader/bsfogproperty.cpp",
+    "BSShader/bsshadertextureset.cpp",
+    "BSShader/bsshadermanager.cpp",
+    "BSShader/imagespacemanager.cpp",
+    "BSShader/imagespaceshaderparam.cpp",
+    "BSShader/bsshaderbloodsplatter.cpp",
+    "BSSystem/archive.cpp",
+    "BSSystem/bsfile.cpp",
+    "BSSystem/bsfilecache.cpp",
+    "BSSystem/bssearchpath.cpp",
+    "BSSystem/filefinder.cpp",
+    "d3dx9/d3dxmath.cpp",
+];
+
+/// [`base_status`] for one function: a [`LOGIC_UNITS`] unit is `open`.
+fn unit_status(subsystem: &str, unit: &str) -> &'static str {
+    if LOGIC_UNITS.contains(&unit) {
+        "open"
+    } else {
+        base_status(subsystem)
+    }
+}
+
+/// The status of a function run from a generated table ([`TABLES`]: static
+/// initializers, `atexit` destructors): covered by the engine, but not a hand
+/// translation.
+const TABLE: &str = "static init (table)";
+
+const STATUSES: [&str; 6] = ["translated", TABLE, "traced", "platform", "library", "open"];
 
 struct Func {
     addr: u32,
@@ -83,30 +144,56 @@ struct Func {
     subsystem: String,
     placed: String,
     translated: BTreeSet<String>,
+    /// Rows of the static-initializer table that run this function.
+    table: BTreeSet<String>,
     replaced: BTreeSet<String>,
     traced: BTreeSet<String>,
+    incomplete: BTreeSet<String>,
 }
 
 impl Func {
-    /// Translated or replaced inside `crates/engine`: the engine has it. A
-    /// translation elsewhere (an older marker in `crates/world`) still
-    /// needs its engine version.
+    /// Translated, run from the static-initializer table or replaced inside
+    /// `crates/engine`: the engine has it. A translation elsewhere (an older
+    /// marker in `crates/world`) still needs its engine version.
     fn in_engine(&self) -> bool {
-        self.translated
+        !self.partial_in_engine()
+            && self
+                .translated
+                .iter()
+                .chain(&self.table)
+                .chain(&self.replaced)
+                .any(|l| l.starts_with("crates/engine/"))
+    }
+
+    fn partial_in_engine(&self) -> bool {
+        self.incomplete
             .iter()
-            .chain(&self.replaced)
             .any(|l| l.starts_with("crates/engine/"))
+    }
+
+    fn queue_status(&self) -> &'static str {
+        if self.partial_in_engine() {
+            "partial"
+        } else if self.in_engine() {
+            "done"
+        } else if unit_status(&self.subsystem, &self.unit) != "open" {
+            unit_status(&self.subsystem, &self.unit)
+        } else {
+            self.status()
+        }
     }
 
     fn status(&self) -> &'static str {
         if !self.translated.is_empty() {
             "translated"
+        } else if !self.table.is_empty() {
+            TABLE
         } else if !self.replaced.is_empty() {
             "platform"
         } else if !self.traced.is_empty() {
             "traced"
         } else {
-            base_status(&self.subsystem)
+            unit_status(&self.subsystem, &self.unit)
         }
     }
 }
@@ -143,6 +230,8 @@ fn addresses(line: &str) -> Vec<u32> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Cite {
     Traced,
+    /// An explicit gap, kept in the engine task queue even with a marker.
+    Incomplete,
     /// On a translation marker (ADR-0003).
     Translated,
     /// On a `Platform: replaces <addr>` marker: Rust platform code stands in
@@ -151,7 +240,9 @@ enum Cite {
 }
 
 fn marker(line: &str) -> Option<Cite> {
-    if line.contains("Translated from") || line.contains("decompiled, FalloutNV") {
+    if line.contains("Translation incomplete:") {
+        Some(Cite::Incomplete)
+    } else if line.contains("Translated from") || line.contains("decompiled, FalloutNV") {
         Some(Cite::Translated)
     } else if line.contains("Platform: replaces") {
         Some(Cite::Replaced)
@@ -177,6 +268,38 @@ fn scan(text: &str) -> Vec<(u32, Cite, usize)> {
         }
     }
     out
+}
+
+/// The generated table of the static initializers
+/// (`crates/engine/data/static_initializers.tsv`, research/initgen): each
+/// row runs the `__cinit` entry in its first column through the shape
+/// executors of `crates/engine/src/static_init.rs`. It counts toward
+/// coverage under its own status ([`TABLE`]), not as a hand translation.
+const INITIALIZER_TABLE: &str = "crates/engine/data/static_initializers.tsv";
+
+/// The generated table of the `atexit` destructors
+/// (`crates/engine/data/atexit_destructors.tsv`, research/initgen `--atexit`):
+/// each row is the translation of the function in its first column
+/// (`crates/engine/src/static_exit.rs`), counted exactly as the rows of
+/// [`INITIALIZER_TABLE`].
+const EXIT_TABLE: &str = "crates/engine/data/atexit_destructors.tsv";
+
+/// Every generated table whose rows count as [`TABLE`].
+const TABLES: [&str; 2] = [INITIALIZER_TABLE, EXIT_TABLE];
+
+/// (entry address, line) of every row of the initializer table.
+fn table_rows(text: &str) -> Vec<(u32, usize)> {
+    text.lines()
+        .enumerate()
+        .filter(|(_, l)| !l.starts_with('#') && !l.trim().is_empty())
+        .filter_map(|(i, l)| {
+            let first = l.split('\t').next()?;
+            (first.len() == 8)
+                .then(|| u32::from_str_radix(first, 16).ok())
+                .flatten()
+                .map(|a| (a, i + 1))
+        })
+        .collect()
 }
 
 fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -231,8 +354,10 @@ fn load_map(path: &Path) -> Result<(Vec<Func>, Vec<String>), String> {
             subsystem,
             placed: get("placed"),
             translated: BTreeSet::new(),
+            table: BTreeSet::new(),
             replaced: BTreeSet::new(),
             traced: BTreeSet::new(),
+            incomplete: BTreeSet::new(),
         });
     }
     funcs.sort_by_key(|f| f.addr);
@@ -247,7 +372,7 @@ fn load_map(path: &Path) -> Result<(Vec<Func>, Vec<String>), String> {
 fn run_units(funcs: &mut [Func]) {
     let mut current: Option<(String, String)> = None;
     for f in funcs.iter_mut() {
-        if !f.unit.is_empty() || base_status(&f.subsystem) != "open" {
+        if !f.unit.is_empty() || unit_status(&f.subsystem, &f.unit) != "open" {
             current = None;
             continue;
         }
@@ -267,7 +392,7 @@ struct Counts {
     n: usize,
     bytes: u64,
     named: usize,
-    by: [usize; 5],
+    by: [usize; 6],
 }
 
 impl Counts {
@@ -303,12 +428,12 @@ fn render(funcs: &[Func], header: &[String], unmapped: usize, cites: usize) -> S
     }
     let game_fns: Vec<&Func> = funcs
         .iter()
-        .filter(|f| base_status(&f.subsystem) == "open")
+        .filter(|f| unit_status(&f.subsystem, &f.unit) == "open")
         .collect();
     let game = game_fns.len();
     let game_done = game_fns
         .iter()
-        .filter(|f| matches!(f.status(), "translated" | "traced"))
+        .filter(|f| matches!(f.status(), "translated" | TABLE | "traced"))
         .count();
     let mut s = String::new();
     let _ = writeln!(
@@ -333,6 +458,10 @@ fn render(funcs: &[Func], header: &[String], unmapped: usize, cites: usize) -> S
         s,
         "| Status | Meaning |\n| --- | --- |\n\
          | translated | cited on a translation marker (ADR-0003) in Rust |\n\
+         | static init (table) | a static initializer or an `atexit` destructor run \
+         from a generated table (`crates/engine/data/static_initializers.tsv`, \
+         `crates/engine/data/atexit_destructors.tsv`; research/initgen), not a hand \
+         translation |\n\
          | traced | cited elsewhere in Rust |\n\
          | platform | its subsystem is replaced by Rust/Bevy |\n\
          | library | compiler-generated code, C/C++ runtime, zlib |\n\
@@ -349,10 +478,28 @@ fn render(funcs: &[Func], header: &[String], unmapped: usize, cites: usize) -> S
         );
     }
     let _ = writeln!(s, "| **all** | **{}** | |", total.n);
+    let partials: Vec<_> = funcs.iter().filter(|f| f.partial_in_engine()).collect();
+    let _ = writeln!(
+        s,
+        "\nTranslation totals count markers, not complete behavior. **{}** engine functions\n\
+         have explicit incomplete markers and remain `partial` in the task queue.\n",
+        partials.len()
+    );
+    if !partials.is_empty() {
+        let _ = writeln!(
+            s,
+            "| Partial engine function | Gap location |\n| --- | --- |"
+        );
+        for f in partials {
+            let locations = f.incomplete.iter().cloned().collect::<Vec<_>>().join(", ");
+            let _ = writeln!(s, "| `{:08x}` | `{locations}` |", f.addr);
+        }
+    }
     let _ = writeln!(
         s,
         "\nGame code (functions in subsystems that are neither platform nor library): \
-         **{game}** functions, of which {game_done} ({}) are translated or traced.\n",
+         **{game}** functions, of which {game_done} ({}) are translated, run from the \
+         static-initializer table, or traced.\n",
         pct(game_done, game)
     );
     let _ = writeln!(
@@ -380,17 +527,17 @@ fn render(funcs: &[Func], header: &[String], unmapped: usize, cites: usize) -> S
     );
     let _ = writeln!(
         s,
-        "| Subsystem | Functions | KB | Named | translated | traced | platform | library | open | done |\n\
-         | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+        "| Subsystem | Functions | KB | Named | translated | static init (table) | traced | platform | library | open | done |\n\
+         | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     );
     let mut rows: Vec<_> = subs.iter().collect();
     rows.sort_by(|a, b| b.1.n.cmp(&a.1.n).then(a.0.cmp(b.0)));
     for (name, c) in rows {
-        let done = c.by[0] + c.by[1];
+        let done = c.by[0] + c.by[1] + c.by[2];
         let base = if base_status(name) == "open" { c.n } else { 0 };
         let _ = writeln!(
             s,
-            "| {name} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {name} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
             c.n,
             c.bytes / 1024,
             c.named,
@@ -399,6 +546,7 @@ fn render(funcs: &[Func], header: &[String], unmapped: usize, cites: usize) -> S
             c.by[2],
             c.by[3],
             c.by[4],
+            c.by[5],
             if base == 0 {
                 "-".into()
             } else {
@@ -476,10 +624,10 @@ fn render_frame(funcs: &[Func], rows: &[FrameRow]) -> String {
     );
     let _ = writeln!(
         s,
-        "| Depth | Call sites | Functions | translated | traced | platform | library | open |\n\
-         | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+        "| Depth | Call sites | Functions | translated | static init (table) | traced | platform | library | open |\n\
+         | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     );
-    let mut depths: BTreeMap<usize, ([usize; 5], BTreeSet<u32>)> = BTreeMap::new();
+    let mut depths: BTreeMap<usize, ([usize; 6], BTreeSet<u32>)> = BTreeMap::new();
     for r in rows {
         let e = depths.entry(r.depth).or_default();
         let st = frame_status(funcs, r.addr);
@@ -489,14 +637,15 @@ fn render_frame(funcs: &[Func], rows: &[FrameRow]) -> String {
     for (d, (by, fs)) in &depths {
         let _ = writeln!(
             s,
-            "| {d} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {d} | {} | {} | {} | {} | {} | {} | {} | {} |",
             by.iter().sum::<usize>(),
             fs.len(),
             by[0],
             by[1],
             by[2],
             by[3],
-            by[4]
+            by[4],
+            by[5]
         );
     }
     let _ = writeln!(
@@ -519,6 +668,30 @@ fn render_frame(funcs: &[Func], rows: &[FrameRow]) -> String {
         );
     }
     s
+}
+
+/// Live-system wiring is separate from executable translation coverage.
+fn render_wiring(table: &str) -> String {
+    let mut counts = [[0usize; 3]; 2];
+    for line in table
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.starts_with("seq\t"))
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        let depth: usize = fields[1].parse().expect("wiring depth");
+        let status = match fields[5] {
+            "system" => 0,
+            "partial" => 1,
+            "open" => 2,
+            other => panic!("unknown wiring status {other}"),
+        };
+        counts[depth - 1][status] += 1;
+    }
+    let mut out = String::from("\n### Frame system wiring\n\nEvery depth-1 and depth-2 call is listed in [frame_wiring.tsv](../research/engine-map/frame_wiring.tsv), generated and checked by `world::frame::coverage`. Partial means some behavior exists, with its placement or missing work stated in the row; it does not mean the function is fully executed in play. Queries and unsupported calls stay open. Translation counts above are separate.\n\n| Depth | system | partial | open |\n| ---: | ---: | ---: | ---: |\n");
+    for (depth, c) in counts.iter().enumerate() {
+        let _ = writeln!(out, "| {} | {} | {} | {} |", depth + 1, c[0], c[1], c[2]);
+    }
+    out
 }
 
 fn main() {
@@ -567,7 +740,25 @@ fn main() {
                 Cite::Translated => f.translated.insert(loc),
                 Cite::Replaced => f.replaced.insert(loc),
                 Cite::Traced => f.traced.insert(loc),
+                Cite::Incomplete => f.incomplete.insert(loc),
             };
+        }
+    }
+    for table in TABLES {
+        let Ok(text) = fs::read_to_string(root.join(table)) else {
+            continue;
+        };
+        for (a, line) in table_rows(&text) {
+            cited.insert(a);
+            let k = funcs.partition_point(|f| f.addr <= a);
+            match k.checked_sub(1).map(|k| &mut funcs[k]) {
+                Some(f) if a < f.addr + f.size.max(1) => {
+                    f.table.insert(format!("{table}:{line}"));
+                }
+                _ => {
+                    unmapped.insert(a);
+                }
+            }
         }
     }
     let units_dir = root.join("crates/engine/src/units");
@@ -598,7 +789,7 @@ fn main() {
             let mut done = BTreeSet::new();
             for f in &funcs {
                 if f.unit.is_empty()
-                    || base_status(&f.subsystem) != "open"
+                    || unit_status(&f.subsystem, &f.unit) != "open"
                     || !(want.contains(f.unit.as_str()) || want.contains(f.subsystem.as_str()))
                 {
                     continue;
@@ -632,7 +823,12 @@ fn main() {
             std::process::exit(2);
         }
     };
-    let md = render(&funcs, &header, unmapped.len(), cited.len()) + &render_frame(&funcs, &frame);
+    let md = render(&funcs, &header, unmapped.len(), cited.len())
+        + &render_frame(&funcs, &frame)
+        + &render_wiring(
+            &fs::read_to_string(root.join("research/engine-map/frame_wiring.tsv"))
+                .expect("frame wiring table"),
+        );
     let out = root.join("docs/LEDGER.md");
     if check {
         let cur = fs::read_to_string(&out).unwrap_or_default();
@@ -650,8 +846,10 @@ fn main() {
             let locs: Vec<&String> = f
                 .translated
                 .iter()
+                .chain(&f.table)
                 .chain(&f.replaced)
                 .chain(&f.traced)
+                .chain(&f.incomplete)
                 .collect();
             let _ = writeln!(
                 s,
@@ -696,22 +894,15 @@ fn queue(funcs: &[Func], args: &[String]) {
         {
             // Compiler and runtime code placed in a unit (static
             // initializers) is not translation work even when cited.
-            let st = if f.in_engine() {
-                "done"
-            } else if base_status(&f.subsystem) != "open" {
-                base_status(&f.subsystem)
-            } else {
-                f.status()
-            };
+            let st = f.queue_status();
             println!("{:08x}\t{}\t{}\t{}", f.addr, f.size, st, f.name);
         }
         return;
     }
     let mut per: BTreeMap<(&str, &str), (usize, u64)> = BTreeMap::new();
-    for f in funcs
-        .iter()
-        .filter(|f| !f.in_engine() && !f.unit.is_empty() && base_status(&f.subsystem) == "open")
-    {
+    for f in funcs.iter().filter(|f| {
+        !f.in_engine() && !f.unit.is_empty() && unit_status(&f.subsystem, &f.unit) == "open"
+    }) {
         let e = per.entry((&f.subsystem, &f.unit)).or_default();
         e.0 += 1;
         e.1 += f.size as u64;
@@ -727,6 +918,43 @@ fn queue(funcs: &[Func], args: &[String]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn table_rows_have_their_own_status_and_still_count_as_engine_coverage() {
+        let mut f = func(0x00f6_2250, "compiler: static init/exit");
+        assert_eq!(f.status(), "library");
+        f.table.insert(format!("{INITIALIZER_TABLE}:2"));
+        assert_eq!(f.status(), TABLE);
+        assert!(f.in_engine());
+        assert_eq!(f.queue_status(), "done");
+        // A hand translation of the same entry wins.
+        f.translated.insert("crates/engine/src/x.rs:1".into());
+        assert_eq!(f.status(), "translated");
+    }
+
+    #[test]
+    fn initializer_table_rows_cite_their_entries() {
+        let text = "# generated\n\
+                    00f62250\tobject\t0040e0b0 011ce7c0 00fcee30 w:01054438 f:s.0101712c\n\
+                    \n\
+                    xyz\tconst\n\
+                    00f352d0\treg\t00a26e20 011c32f8\n";
+        assert_eq!(table_rows(text), [(0x00f6_2250, 2), (0x00f3_52d0, 5)]);
+    }
+
+    #[test]
+    fn exit_table_rows_cite_their_functions_and_are_a_table_too() {
+        assert_eq!(TABLES, [INITIALIZER_TABLE, EXIT_TABLE]);
+        let text = "# generated\n\
+                    00fc7a70\tcall\t011c3264 00404a00\n\
+                    00fde581\ttail\t0126fc95 00ec3b35\n";
+        assert_eq!(table_rows(text), [(0x00fc_7a70, 2), (0x00fd_e581, 3)]);
+        let mut f = func(0x00fc_7a70, "compiler: static init/exit");
+        f.table.insert(format!("{EXIT_TABLE}:2"));
+        assert_eq!(f.status(), TABLE);
+        assert!(f.in_engine());
+        assert_eq!(f.queue_status(), "done");
+    }
 
     #[test]
     fn finds_addresses() {
@@ -755,6 +983,31 @@ mod tests {
             .any(|&(a, t, _)| a == 0x00afe220 && t == Cite::Translated));
     }
 
+    #[test]
+    fn explicit_engine_gaps_stay_in_the_queue_until_closed() {
+        let mut f = func(0x008c94e0, "fallout/ai");
+        f.translated.insert("crates/engine/src/ai.rs:1".into());
+        assert_eq!(f.queue_status(), "done");
+        let markers = scan("// Translation incomplete: 008c94e0 - actor scheduling\n");
+        assert_eq!(markers, vec![(0x008c94e0, Cite::Incomplete, 1)]);
+        // A gap in a different adapter does not reopen a complete engine body.
+        f.incomplete.insert("crates/world/src/ai.rs:1".into());
+        assert_eq!(f.queue_status(), "done");
+        f.incomplete.insert("crates/engine/src/ai.rs:2".into());
+        assert!(!f.in_engine());
+        assert_eq!(f.queue_status(), "partial");
+        assert_eq!(f.status(), "translated", "totals still count markers");
+        let report = render(&[f], &[], 0, 1);
+        assert!(report.contains("**1** engine functions"));
+        assert!(report.contains("| `008c94e0` |"));
+
+        let mut f = func(0x008c94e0, "fallout/ai");
+        f.incomplete.insert("crates/engine/src/ai.rs:2".into());
+        assert_eq!(f.queue_status(), "partial", "a gap needs no fake body");
+        f.incomplete.clear();
+        assert_eq!(f.queue_status(), "open");
+    }
+
     fn func(addr: u32, subsystem: &str) -> Func {
         Func {
             addr,
@@ -765,8 +1018,10 @@ mod tests {
             subsystem: subsystem.into(),
             placed: String::new(),
             translated: BTreeSet::new(),
+            table: BTreeSet::new(),
             replaced: BTreeSet::new(),
             traced: BTreeSet::new(),
+            incomplete: BTreeSet::new(),
         }
     }
 
@@ -802,9 +1057,9 @@ mod tests {
         let md = render_frame(&funcs, &rows);
         // Depth 1: four call sites, three functions; the repeat counts twice;
         // 00d00000 is no function's entry and counts as open.
-        assert!(md.contains("| 0 | 1 | 1 | 0 | 0 | 0 | 0 | 1 |"), "{md}");
-        assert!(md.contains("| 1 | 4 | 3 | 2 | 0 | 1 | 0 | 1 |"), "{md}");
-        assert!(md.contains("| 2 | 1 | 1 | 0 | 0 | 0 | 1 | 0 |"), "{md}");
+        assert!(md.contains("| 0 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 1 |"), "{md}");
+        assert!(md.contains("| 1 | 4 | 3 | 2 | 0 | 0 | 1 | 0 | 1 |"), "{md}");
+        assert!(md.contains("| 2 | 1 | 1 | 0 | 0 | 0 | 0 | 1 | 0 |"), "{md}");
         assert!(
             md.contains("| 2 | `00a00000` | `A::B` | translated |"),
             "{md}"
@@ -819,5 +1074,14 @@ mod tests {
         assert_eq!(base_status("LIBCMT"), "library");
         assert_eq!(base_status("NiXenonRenderer"), "platform");
         assert_eq!(base_status("Havok SDK"), "open");
+        assert_eq!(base_status("SpeedTree"), "open");
+        assert_eq!(
+            unit_status("BSShader", "BSShader/imagespacemanager.cpp"),
+            "open"
+        );
+        assert_eq!(
+            unit_status("BSShader", "BSShader/lighting30shader.cpp"),
+            "platform"
+        );
     }
 }

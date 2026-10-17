@@ -48,6 +48,7 @@ dependencies = [
 name = "engine"
 version = "0.1.0"
 dependencies = [
+ "esm",
  "world",
 ]
 
@@ -61,6 +62,16 @@ dependencies = [
 [[package]]
 name = "fos"
 version = "0.1.0"
+
+[[package]]
+name = "host"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "esm",
+ "script",
+ "world",
+]
 
 [[package]]
 name = "mp3"

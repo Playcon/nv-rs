@@ -1,6 +1,6 @@
 # The original game's saves (`.fos`)
 
-M7 research (docs/TASKS.md): the layout of Fallout: New Vegas's own save
+M7 research (the former task list): the layout of Fallout: New Vegas's own save
 files, what nv-rs needs from them to continue a game, and what nv-rs is
 missing to take it. Branch `claude/fos-saves`.
 
@@ -27,6 +27,40 @@ tested, and `world::fos_import` builds nv-rs's `GameState` from a save
   is taken from them.
 - The `.nvse` files next to the saves are the script extender's co-saves, a
   separate format, not covered here.
+
+## Immutable inventory sources
+
+`fos::inventory_source::InventorySource` captures an owned immutable save
+and preserves its REFR/ACHR/ACRE inventories as original item, stack and
+extra byte spans. Capture runs inside the existing complete reference and
+actor decoders, including the player's path. It does not introduce another
+record parser or change the existing public decoded structures. ItemChange
+save/load boundaries remain those of `004bed60` / `004bee00`, and extra-list
+boundaries those of `00426a30` (class names from Xbox PDB).
+
+Each item retains the saved ID and its resolution through that save's own
+form-ID array, the signed item count delta, ordered stacks, and its complete
+record/save context. An absent count or health extra remains distinct from
+an explicitly stored default value. Health bytes retain their raw bits.
+Record-relative and file spans remain correct when Havok data rebases the
+reader. Cloned envelopes own their immutable source lifetime; no engine
+arena pointers or mutable gameplay state are stored here.
+
+Extras with known lengths but opaque semantics retain their entire original
+payload, even when the existing decoded enum only names their kind. Unknown
+lengths, malformed fields and failures after the inventory preserve the
+whole containing record with an explicit failure and publish no partial
+items. Unresolved holders are conservatively preserved undecoded; unresolved
+items in a completely decoded record retain an explicit resolution status.
+Records without an inventory flag are reported without decoding other fields.
+
+All 38 package tests and strict package lint pass, including eleven new
+generated regressions covering source boundaries, opaque payloads, failures,
+raw float bits, actor/player paths, Havok rebasing, separate save contexts
+and ownership. Full workspace checks pass (2026-10-12). This read-only API does
+not remap to installed plugins, import gameplay state, edit inventory or
+write an original save. Engine ownership and whole-save acceptance remain
+tracked in [ENGINE_STATE.md](ENGINE_STATE.md).
 
 ## Conventions
 
@@ -514,7 +548,8 @@ keep their ids. Change forms are applied in file order, references last
 | `discovered`, `map_markers` | `MAPMARKER` extra data | Flags 0x3 where the record hasn't them: found; 0x1 alone: shown. |
 | `set_by_scripts.owners` | `OWNERSHIP` with `CHANGE_REFR_EXTRA_OWNERSHIP` | |
 | `more.ghosts`, `faction_changes` | `GHOST`, `FACTION_CHANGES` extra data | |
-| `items`, `stocked`, `equipped`, `weapon_health` | Inventories | The record's items plus the saved changes; the record's leveled lists rolled by nv-rs unless `CHANGE_REFR_LEVELED_INVENTORY` says the game already did (its picks are among the changes); `WORN` stacks equipped; a weapon's `HEALTH` over its `DATA` health. |
+| `inventory_stacks` | Inventories, through `fos::inventory_source` | Each holder's item changes in saved order: saved id and its resolution, the nv-rs form, the signed count delta, and per stack `COUNT`, raw `HEALTH` bits and `WORN`; other extras kept as their original bytes. Kept by nv-rs's own saves; gameplay doesn't change them ([ENGINE_STATE.md](ENGINE_STATE.md), "World inventory stacks"). |
+| `items`, `stocked`, `equipped`, `weapon_health` | Derived from `inventory_stacks` | The record's items plus the saved changes; the record's leveled lists rolled by nv-rs unless `CHANGE_REFR_LEVELED_INVENTORY` says the game already did (its picks are among the changes); `WORN` stacks equipped; a weapon's `HEALTH` over its `DATA` health (the last stack with health, when there are several). |
 | `dead`, `unconscious`, `set_by_scripts.restrained` | `ACTOR_LIFESTATE` | Dying (1) and dead (2), 3, 5. |
 | `teammates`, `set_by_scripts.ignoring_crime`, `more.forced_sneak`, `more.critical_stage` | Actor fields `bPlayerTeammate`, `bIgnoreCrime`, `bForceSneak`, `eCriticalStage` | |
 | `more.dispositions` | `ACTOR_DISPOSITION_MODIFIERS` toward the player | |
@@ -595,3 +630,19 @@ decode to its length.
 Run on all nine real saves (2026-10-07): every one parses with every byte
 accounted for, and every change form decodes to exactly its length (3,585
 to 4,509 per file; none not decoded, none failed).
+
+Read-only baseline on 2026-10-10: the user's current save directory holds
+11 `.fos` files, a different set from the nine above. Seven pass the
+inspector; four files with 123-124 plugins report 13 change-form failures
+in total (reference trailing bytes, actor separator errors and unknown
+types). All 11 outer file layouts account for their bytes, but that does
+not establish change-form support. The four saves with only the base
+game and nine official add-ons pass, including an early Doc Mitchell
+autosave. These results do not prove import or round-trip fidelity.
+
+Private per-file SHA256 values and inspector output are in
+`%USERPROFILE%\nv-re\work\phase0\codex-audit\save-baselines.json` and the
+linked logs. Input hashes were identical before and after inspection;
+no save bytes are committed. Phase 2 should first validate the ExtraData
+adapter against the supported early save. The heavily modded failures
+remain recorded gaps, not a reason to expand the active milestone now.

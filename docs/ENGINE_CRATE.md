@@ -145,7 +145,12 @@ $L scaffold "fallout/ai/processlists.cpp" # create its file (lead)
 
 7. **Report** per function: translated / partial / skipped, and why.
    Partial translations keep the marker only if the missing part is named
-   in a comment (`// open: ...`).
+   in a comment (`// open: ...`). Also add `// Translation incomplete:
+   <address> - <missing behavior>` on one line. The ledger keeps such
+   addresses `partial` in the engine queue instead of `done`; remove that
+   incomplete marker only when the documented gap is closed and tested.
+   A panic-only placeholder has no translated branch: leave it skipped,
+   without a translation marker or a new registry entry.
 
 ## Checking against the real exe
 
@@ -154,6 +159,216 @@ Pure functions can be compared with the real CPU through `nv-call`
 translation, bit for bit. The ledger will gain a column for that check.
 Stateful code is checked by the save round trip (Phase 2) and the
 acceptance routes once it is wired.
+
+## The script interpreter (opt-in run on real scripts)
+
+The interpreter's trunk (`Script::Run` → `ScriptRunManager::Run` →
+`ScriptRunner::Run` → `EvaluateLine` → `CExpression::Eval`) is translated;
+`INTERPRETER_TRUNK` in `units/fallout_shared/tesscriptrunmanager.rs` lists
+it and fails when a member is not registered. CI runs it on generated
+compiled scripts only. With the player's installation, an ignored test runs
+every quest script of `FalloutNV.esm` once through it on generated forms
+and prints which untranslated functions stop them:
+
+```sh
+NV_DATA="<...>/Fallout New Vegas/Data" cargo test -p engine --test real_scda -- --ignored --nocapture
+```
+
+The executable is found next to `Data` (`exe::installed_exe`) and refused
+unless it is 1.4.0.525 (`exe::verify`), the check a game start-up can reuse.
+
+## In the running game
+
+The `host` crate starts the engine for the running game. The viewer calls
+`host::Host::start(<Data>)` before loading anything: it opens the
+`FalloutNV.exe` next to `Data` (read-only), refuses every build but
+1.4.0.525 with the file and the reason, maps the data sections and runs the
+allocator start-up the probes run (`00401000`, `00aa2230`, `00aa21d0`,
+holder at `011f6118`, `00aa2020`); the rest of `WinMain`'s start-up is not
+reproduced. The startup line reads `Game code: <exe> (1.4.0.525), <n>
+translated functions, allocator started.` The `Host` is a Bevy non-send
+resource (main thread only; the engine is not `Send`).
+
+Nothing runs through it yet (script track step S4): the game's scripts
+still run through `crates/script`.
+
+`host::script_form` (step S5) makes a script record into a `Script` form
+in the game's memory and carries a script instance's variables between
+the world (`script::interp::Locals`, by name) and the game's
+`ScriptLocals` (by `SLSD` id, through `ScriptLocals::SetVariable` and
+`GetVariable`; references as form ids in the low word). `Script::Load`
+itself is bridged: its file reading (`TESFile`, `004726f0`, `00401660`,
+`ScriptVariable::Load` `005e2a20`) is not translated, so the record's
+bytes are put where it puts them; referenced forms stay unresolved.
+With the installation, an ignored test takes all 322 quest scripts of
+`FalloutNV.esm` (3,642 variables, 178 references) through the game's
+locals and back unchanged:
+
+```sh
+NV_DATA="<...>/Fallout New Vegas/Data" cargo test -p host --release --test real_quest_locals -- --ignored --nocapture
+```
+
+`host::global_form` makes a global (`CreateFormOfType(6)`, the `TESGlobal`
+constructor `005a6320`, then `FNAM`/`FLTV` where `TESGlobal::Load` puts
+them) and carries its value to and from the float at +0x24 that the
+interpreter reads (`00526ac0`); the same ignored test checks every global
+of `FalloutNV.esm`.
+
+`host::quest_form` (step S6) makes a quest the way the game loads a form:
+the constructor (`CreateFormOfType(0x47)`, `TESQuest` `0060c4b0`), then its
+record read by the game's own code through the plugin's `TESFile`
+(`host::game_file`): `TESFile::SetOffset` (`004723a0`: seek to the record,
+read its header), `TESQuest::Load` (`0060ceb0`: every chunk through
+`GetTESChunk`/`GetChunkData`/`NextChunk`, `TESFile::LoadForm` giving it
+its form id and file, the stages and their items with result scripts,
+objectives and targets, conditions), and the quest's `InitItem`
+(`0060cba0`: the script resolved through the game's form map, its
+`ScriptLocals`, stages, objectives, conditions). Its script runs through
+the game's interpreter: `0060d4d0` → `Script::Run` →
+`ScriptRunManager::Run` → `ScriptRunner::Run` → `EvaluateLine` /
+`CExpression::Eval`.
+
+Only the file's bytes are platform. `BSFile` (`bsfile_xenon.cpp`) is
+platform: `units::platform::open_memory_file` makes a `BSFile` (the game's
+vtable, ready, position 0) over an in-memory copy of the parts of the file
+the host supplies, at their real offsets (the record and the 0x18 bytes
+after it, from `esm`); `BSFile::ReadF` (`00b00650`) and its seek (vtable
++0x14, `00b00590`) are stand-ins that read and move in it, and a read of
+anything not supplied stops loudly. Bridged: `TESFile::OpenTES`
+(`00470c70`, which finds the file, constructs the `BSFile` and reads the
+file's `TES4` header and masters); `host::game_file::GameFile::open`
+constructs the `TESFile` with the game's constructor (no name: it opens
+nothing) and sets what `OpenTES` leaves (`m_pFile`, `m_filesize`,
+`cCompileIndex`). So plugins with masters aren't supported yet, and
+compressed records (zlib, `TESFile::DecompressCurrentForm`) are refused
+with a message. `Script::Load` is still bridged (`host::script_form`, the
+record's bytes put where it puts them); its form goes into the form map
+through `TESForm::SetFormID`.
+
+All 300 scripted quests of `FalloutNV.esm` load this way: 126 have stages
+(913 in all), each matching the record's `INDX` list. `SetStage`'s path
+(`TESQuest::SetStageDone` `0060d510` → the stage's mark-done `0060f4a0` →
+`TESQuestStage::SetDone` `0060fb60` for each item) runs: on a stage without
+items it completes and `GetStage` (`TESQuest::GetCurrentStage` `0060d700`)
+reads the new stage; on a stage with items `SetDone` stops at the first of
+its untranslated callees (`004b0fc0`, `004b10f0`, `0060da90`, `0060ca30`,
+`005ec060`, `00681050`, `00682320`) and beyond them needs game objects the
+host doesn't have (the player).
+
+Start-up makes the save/load game singleton the constructor needs
+(`BGSSaveLoadGame::Create` `00847480`, from `TES::TES`; the rest of
+`TES::TES` doesn't run: `00c44980`, `004ba280`, `00528cb0`, `00626fd0`,
+`0084fc70`, `00856380`, `00c3da50`, `00624bf0` are open).
+
+The acceptance test runs `VMS49Timer` (`VMS49TimerSCRIPT`): its first
+GameMode run sets `bInitialized` to 1 and `fTimer` to 1.0; with `fTimer`
+then 0.5, a second run keeps it. A survey loads and runs every scripted quest of
+`FalloutNV.esm` once: 296 of 300 run to the end, 13 change variables on
+their first run. The four that stop need game objects the host doesn't
+have yet: the player (`GetPlayerControlsDisabled`,
+`DisablePlayerControls`), the `BSAudio` singleton (`PlayBink`) and
+`BSDLCSystemUtility` (`00af26c0`). Referenced forms (`SCRO`) are still
+unresolved, so a line that uses one fails as the game fails on an
+unresolved object.
+
+```sh
+NV_DATA="<...>/Fallout New Vegas/Data" cargo test -p host --release --test live_quest_script -- --ignored --nocapture
+NV_DATA="<...>/Fallout New Vegas/Data" cargo test -p host --release --test live_quest_survey -- --ignored --nocapture
+NV_DATA="<...>/Fallout New Vegas/Data" cargo test -p host --release --test live_quest_stages -- --ignored --nocapture
+```
+
+In the viewer, quests run through it (`host::quest_vm`, the world's
+`world::scripting::QuestVm` hook on `Runner`): each frame's quest
+`GameMode` runs (`Runner::update`) offer each quest to the host, which
+takes those whose script has `GameMode` blocks only, no `ref` variables,
+only its own variables and no function but `GetSecondsPassed`
+(`host::quest_vm::takes`; 16 of 465 scripted quests with the DLCs, all of
+them variable holders today); the rest run through `crates/script` as
+before. A taken quest is made on its first run (`host::quest_vm::make_quest`,
+the one place to swap in the real `TESQuest::Load` and `InitItem` when they
+are translated), its variables are copied into its `ScriptLocals` before
+each run and back after, and the world's `seconds_passed` is the frame's
+elapsed time `GetSecondsPassed` reads (`011f6394` +0xC, `0084d030`, through
+`0059c430`) with the script's own delay and get-seconds buffer (`Script`
++0x38, +0x3C) cleared: the world keeps the quests' run schedule. A quest
+whose making or run stops goes back to `crates/script` for good. The
+startup prints `Game's interpreter: runs N of M scripted quests`, and the
+F12 report how many quests ran (and how many went back). Opt-in check:
+`live_quest_vm` (a new game's taken quests run through it; `VMS49Timer`,
+taken by the test though the viewer doesn't, counts down with the world's
+time exactly as `crates/script` does, run by run).
+
+Not yet: commands (the handlers aren't connected to the world, so
+scripts that call one stay on `crates/script`), stages (`SetStage`/
+`GetStage` need the stage list), and the frame's call site (`00455490` at
+PostSwapProcess).
+
+### Static initializers
+
+The game constructs many globals before `WinMain`: `__cinit` (`00eccd14`)
+runs `_initterm_e(010113c4, 010113e8)` (8 C initializers) and
+`_initterm(00fdf4a4, 010113c0)` (17,728 non-null C++ dynamic initializers:
+`Setting`s with their names and defaults, the NiAnimation dispatch tables,
+computed float constants, `NiRTTI` records, Havok class records, ...).
+`host::Host::start` runs both tables in `__cinit`'s order
+(`engine::static_init::run`) right after mapping the executable.
+
+Most entries are a few instructions of one of three shapes. They are not
+one Rust function each: `research/initgen` reads every entry's code
+(Ghidra's disassembly, or its bytes for the ~1,400 entries Ghidra made no
+function of), checks it instruction by instruction against a shape, and
+writes one row per matching entry to `crates/engine/data/static_initializers.tsv`
+(16,937 rows; 799 entries refused, left for hand translation). The engine
+has one translation per shape (`crates/engine/src/static_init.rs`):
+
+- `reg f g`: `CALL f; MOV [g],EAX` (the 25 one-shot NiAnimation
+  registrations, translated by initgen's `--rust` and checked by hand).
+- `object ctor g dtor args`: a constructor run on a global with pushed
+  words, floats or doubles (x87), then its destructor given to `_atexit`.
+- `const ops`: x87 loads, arithmetic and stores (double precision, x87 NaN
+  rules), the float square-root helper `004019b0`, calls without
+  arguments, plain moves.
+
+The ledger (`scripts/ledger`) counts each row as the translation of its
+entry. The values come from the executable at run time (rows hold
+addresses, never the executable's bytes).
+
+Entry `00fb66a0` builds the `MemoryManager` singleton (`00aa3880`); the
+memory manager is platform, so in its place, at the same point of the
+table, runs the Ni allocator set-up `host::start_allocator` (the settings'
+maps allocate through it): `host::STAND_INS`.
+
+An entry without a row runs by address when translated. An entry whose
+row needs an untranslated callee is skipped, and an entry that reaches an
+untranslated function part-way is recorded with the stop; all are
+counted (`Report`, and the start-up line). Measured 2026-10-13: 16,688
+entries run from the table, 799 without a row, 243 with an untranslated
+callee, 5 stopped part-way.
+
+`crates/host/tests/static_initializers.rs` (opt-in, `NV_EXE`) runs it on the
+real executable: three sample settings (`fGunShellLifetime`,
+`fPlayerMaxResistance`, `fMaxArmorRating`) hold the name and default their
+initializers pass, and 55 settings across all seven `Setting` constructors
+and their three collections hold their names, values and vtables.
+
+
+### Shut-down: the atexit destructors and the exit path
+
+`research/initgen --atexit` does for shut-down what it does for start-up:
+4,790 of the 5,020 `atexit` destructor functions (`00fc7a70` onwards) are
+rows of `crates/engine/data/atexit_destructors.tsv` (shapes `call` and `tail`,
+`engine::static_exit`; one more has a hand translation and the 229 others stay for hand translation). A row is
+callable at its own address: when no function is registered at an address,
+`Engine::call` and `Engine::is_translated` consult that table (a registered
+function or a test double wins; a row whose destructor is untranslated is
+not translated). `_atexit` (`00ec658f`) is a platform stand-in that records
+its function in the CRT's own table (`01271a8c`/`01271a88`), and
+`units::crt::doexit` (`00eccd99`) runs the exit sequence in the exe's order:
+the registered functions last first, then the pre-terminator table
+(`010113f4..01011400`), then the terminator table (`01011404..01011408`);
+what is untranslated is skipped and counted (`ExitReport`), and the final
+`ExitProcess` is only reported. The host does not call it yet.
+
 
 ## Lessons from the first sessions (2026-10-09)
 

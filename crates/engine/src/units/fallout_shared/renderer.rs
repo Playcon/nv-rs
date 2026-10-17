@@ -1635,9 +1635,75 @@ pub fn fn_004dc590(e: &mut Engine) {
     e.call(SMART_POINTER_SET, &args![SMART_POINTER_B, 0u32]);
 }
 
+/// The `Setting` base constructors for a byte (`0045cfb0`) and a float
+/// (`0040e130`) value; the vtable and collection of the third settings
+/// collection (`010184fc`, `0045d180`) and of the interface settings
+/// (`01022738`, `004de490`).
+const SETTING_CONSTRUCT_BYTE: u32 = 0x0045_cfb0;
+const SETTING_CONSTRUCT_FLOAT: u32 = 0x0040_e130;
+const PREF_SETTING_VTABLE: u32 = 0x0101_84fc;
+const PREF_SETTINGS: u32 = 0x0045_d180;
+const INTERFACE_SETTING_VTABLE: u32 = 0x0102_2738;
+const INTERFACE_SETTINGS: u32 = 0x004d_e490;
+/// Slot of a settings collection's vtable that adds a setting.
+const SETTINGS_ADD_SLOT: u32 = 0x4;
+
+// Translated from 004de2f0 (PC disassembly, FalloutNV.exe 1.4.0.525)
+/// The constructor of a boolean setting of the `0045d180` collection
+/// (`thiscall`, `RET 8`; the value a byte, `MOVZX`): the byte base
+/// constructor (`0045cfb0`), the vtable `010184fc`, then adds itself to the
+/// collection (vtable slot +4). Returns `this`. The exception-unwinding frame
+/// is not translated.
+pub fn fn_004de2f0(e: &mut Engine, this: Ptr, name: u32, value: u8) -> Ptr {
+    e.call(SETTING_CONSTRUCT_BYTE, &args![this, name, value as u32]);
+    e.mem.set_u32(this.addr(), PREF_SETTING_VTABLE);
+    let collection = e.call(PREF_SETTINGS, &[]).u32();
+    e.vcall(collection, SETTINGS_ADD_SLOT, &args![this]);
+    this
+}
+
+// Translated from 004de370 (PC disassembly, FalloutNV.exe 1.4.0.525)
+/// The constructor of a float setting of the `004de490` collection
+/// (`thiscall`, `RET 8`): the float base constructor (`0040e130`, the value
+/// passed on through the x87 stack: a signaling NaN comes out quiet), the
+/// vtable `01022738`, then adds itself to the collection (vtable slot +4).
+/// Returns `this`. The exception-unwinding frame is not translated.
+pub fn fn_004de370(e: &mut Engine, this: Ptr, name: u32, value: u32) -> Ptr {
+    let nan = value & 0x7f80_0000 == 0x7f80_0000 && value & 0x007f_ffff != 0;
+    let value = if nan { value | 0x0040_0000 } else { value };
+    e.call(SETTING_CONSTRUCT_FLOAT, &args![this, name, value]);
+    e.mem.set_u32(this.addr(), INTERFACE_SETTING_VTABLE);
+    let collection = e.call(INTERFACE_SETTINGS, &[]).u32();
+    e.vcall(collection, SETTINGS_ADD_SLOT, &args![this]);
+    this
+}
+
+/// `004dd150` (Ghidra names it `powf`; no map name): cdecl (base, exponent), result in ST0.
+const POWF: u32 = 0x004d_d150;
+
+// Translated from 004dd130 (decompiled, FalloutNV.exe 1.4.0.525)
+/// No map name: the wrapper that forwards its two `float` arguments to
+/// `powf` (`004dd150`) and leaves the result in ST0. Both go through an
+/// `FLD`/`FSTP` pair, which quiets a signalling NaN.
+pub fn fn_004dd130(e: &mut Engine, base: f32, exponent: f32) -> f32 {
+    e.call(POWF, &args![x87_quiet(base), x87_quiet(exponent)])
+        .f32()
+}
+
+/// The function `fn_004dcce0` calls on the member (`00658930`).
+const CALLEE_00658930: u32 = 0x0065_8930;
+
+// Translated from 004dcce0 (decompiled, FalloutNV.exe 1.4.0.525)
+/// Thin wrapper: calls `00658930` with `ECX` = `this + 0x450` and passes on its 16-bit result.
+pub fn fn_004dcce0(e: &mut Engine, this: Ptr) -> u16 {
+    e.call(CALLEE_00658930, &args![this.byte_add(0x450)]).u16()
+}
+
 /// This unit's translated functions, by exe address.
 pub fn funcs() -> Vec<(u32, AbiFn)> {
     vec![
+        entry!(0x004de2f0, fn_004de2f0(Ptr, u32, u8) -> Ptr),
+        entry!(0x004de370, fn_004de370(Ptr, u32, u32) -> Ptr),
         entry!(0x004da4d0, renderer_kill(u8)),
         entry!(0x004da570, fn_004da570() -> bool),
         entry!(0x004da650, fn_004da650(Ptr) -> Ptr),
@@ -1678,12 +1744,33 @@ pub fn funcs() -> Vec<(u32, AbiFn)> {
         entry!(0x004dc540, fn_004dc540(Ptr, Ptr)),
         entry!(0x004dc560, fn_004dc560()),
         entry!(0x004dc590, fn_004dc590()),
+        entry!(0x004dd130, fn_004dd130(f32, f32) -> f32),
+        entry!(0x004d_cce0, fn_004dcce0(Ptr) -> u16),
     ]
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn interface_and_third_collection_settings_join_their_collections() {
+        let mut e = Engine::new();
+        let c = e.mem.alloc(8);
+        e.put_vtable(0x0090_0000, &[0, 0x0090_1000]);
+        e.mem.set_u32(c, 0x0090_0000);
+        e.register_double(PREF_SETTINGS, move |_, _| c.into_ret());
+        e.register_double(INTERFACE_SETTINGS, move |_, _| c.into_ret());
+        e.register(0x0090_1000, |_, _| Ret::default());
+        let b = e.mem.alloc(0xc);
+        e.call(0x004de2f0, &[b, 0x50, 1]);
+        assert_eq!(e.mem.u32(b), PREF_SETTING_VTABLE);
+        assert_eq!(e.mem.u8(b + 4), 1);
+        let f = e.mem.alloc(0xc);
+        e.call(0x004de370, &[f, 0x60, 0x7f80_0004]);
+        assert_eq!(e.mem.u32(f), INTERFACE_SETTING_VTABLE);
+        assert_eq!(e.mem.u32(f + 4), 0x7fc0_0004);
+    }
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -3233,5 +3320,43 @@ mod tests {
         assert_eq!(calls_to(&e, NO_EFFECT), vec![vec![0xbbbb]]);
         assert_eq!(e.mem.u32(SMART_POINTER_B), 0);
         assert_eq!(e.mem.u32(SMART_POINTER_A), 0xaaaa);
+    }
+
+    #[test]
+    fn pow_wrapper_forwards_both_floats_and_returns_the_result() {
+        let mut e = Engine::new();
+        e.register(POWF, |_, a| {
+            f32::from_bits(a[0]).powf(f32::from_bits(a[1])).into_ret()
+        });
+        assert_eq!(e.call(0x004d_d130, &args![2.0f32, 10.0f32]).f32(), 1024.0);
+    }
+
+    #[test]
+    fn pow_wrapper_quiets_a_signalling_nan_argument() {
+        let mut e = Engine::new();
+        e.register(POWF, |_, a| Ret {
+            eax: a[0],
+            ..Ret::default()
+        });
+        e.call_log = Some(vec![]);
+        e.call(0x004d_d130, &args![f32::from_bits(0x7f80_0001), 1.0f32]);
+        let log = e.call_log.take().unwrap();
+        let forwarded = log.iter().find(|(addr, _)| *addr == POWF).unwrap();
+        assert_eq!(forwarded.1, vec![0x7fc0_0001, 1.0f32.to_bits()]);
+    }
+
+    #[test]
+    fn l68d_004dcce0_passes_this_plus_450_to_the_callee() {
+        let mut e = Engine::new();
+        e.register(CALLEE_00658930, |_, a| Ret {
+            eax: a[0] | 0x5_0000,
+            ..Ret::default()
+        });
+        e.call_log = Some(vec![]);
+        assert_eq!(e.call(0x004d_cce0, &args![0x4100u32]).u16(), 0x4550);
+        let log = e.call_log.take().unwrap();
+        let inner: Vec<_> = log.iter().filter(|c| c.0 == CALLEE_00658930).collect();
+        assert_eq!(inner.len(), 1);
+        assert_eq!(inner[0].1, vec![0x4100 + 0x450]);
     }
 }

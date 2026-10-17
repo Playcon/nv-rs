@@ -8,20 +8,56 @@ work can actually be merged. Read it, then give it and
 The short version:
 
 1. Work from the latest `main`, in a fork, on a topic branch.
-2. Claim a task on GitHub before you start ([TASKS.md](docs/TASKS.md),
-   issues titled `[task] …`).
+2. Open an issue saying what you want to do, and wait for the maintainer's
+   go-ahead before you start.
 3. Trace every behaviour in the original game. No invented behaviour.
 4. Open a small pull request against `main` that passes the checks and
    the acceptance routes.
 
-## Already working in a fork? Start here
+## Where help is needed now
 
-On 2026-10-07 `main` moved forward by several hundred commits: everything
-that had been on the maintainer's `claude/overnight-integration` branch
-(NPC AI, combat, physics, dialogue, the Pip-Boy, Chazm's and the Dead
-Money contributor's work, and more; see
-[docs/MILESTONES.md](docs/MILESTONES.md)). If you forked before that, do
-this before anything else:
+Since 2026-10-09 the project is porting `FalloutNV.exe` system by system
+([docs/ENGINE_PORT_PLAN.md](docs/ENGINE_PORT_PLAN.md)). Every function of
+the executable is listed in [docs/LEDGER.md](docs/LEDGER.md) and is
+translated into Rust in the `engine` crate, marked with its address. The
+hand-written systems in `world` and the other game crates are being
+replaced by that translated code, one whole system at a time. The
+translation itself is done by the maintainer's sessions, so new
+hand-written gameplay code is likely to be replaced, and translations
+from contributors can't be merged (they would collide with the
+maintainer's queue).
+
+Where help is useful, in order:
+
+1. **Check translations against the real executable.** Pure functions can
+   be run on the real CPU with `nv-call`
+   ([`research/nv-oracle`](research/nv-oracle/)) and compared with their
+   Rust translation. Adding these comparisons for translated functions
+   that don't have them yet needs only your own copy of the game. Commit
+   the test cases and addresses, never the executable or its output.
+   Report a mismatch as an issue with the address and the inputs.
+2. **Play test builds and report differences.** Each play build switches a
+   system over to the original's code
+   ([docs/MILESTONES.md](docs/MILESTONES.md)). Anything that behaves
+   differently from the original game is a bug worth an issue: say where,
+   what you did, and what the original does.
+3. **Compare with the original game.** Recording the original game and
+   comparing it with nv-rs automatically is the most valuable check the
+   port can have. Propose a plan in an issue before building tools for
+   it.
+4. **Platforms.** The Linux port (#61) and the macOS/Metal port are open.
+   Check the open pull requests first and build on them.
+
+Not open for contributions, because the maintainer's sessions are doing
+them and parallel versions would conflict: translating the executable
+(all of the ledger), the game-state model and original saves, and
+switching translated systems on in the running game
+([docs/SYSTEMS.md](docs/SYSTEMS.md) lists them all, in order).
+
+## Updating an older fork
+
+`main` moves quickly. If your fork is more than a few days old, do this
+before anything else:
 
 1. **Update your fork.** On GitHub press **Sync fork** on your fork's
    `main`, or:
@@ -35,13 +71,12 @@ this before anything else:
    ```
 
    Keep your own work on topic branches, never on your fork's `main`.
-2. **Delete the copied `claude/*` and `codex/*` branches** in your fork.
-   They are the maintainer's branches, all of them are now in `main`, and
-   pull requests built on them will be closed.
-3. **Check that your work isn't already in `main`.** Many systems landed
-   at once: search the code and [docs/TASKS.md](docs/TASKS.md) ("Landed")
-   before continuing.
-4. **Claim it.** Find the matching `[task]` issue, or open one, and
+2. **Don't build on copied `claude/*` or `codex/*` branches.** They are
+   the maintainer's working branches; pull requests built on them will be
+   closed.
+3. **Check that your work isn't already in `main`**: search the code,
+   including `crates/engine` for the exe address you traced.
+4. **Claim it.** Find the matching issue, or open one, and
    comment `Claiming this` with your branch name, even if you started
    before claiming. If someone else already claimed it, say what you have
    on the issue and agree who continues; don't open a competing PR.
@@ -60,30 +95,27 @@ out, and say in the pull request which parts are traced.
 
 ## Claiming a task
 
-Open work is listed in [docs/TASKS.md](docs/TASKS.md) and as GitHub
-issues titled `[task] …` (major systems, open to everyone). The
-maintainer's list in TASKS.md (items `B1`, `B2`, …) is not open for
-claiming; report new bugs as issues instead.
+There is no open task list right now. To work on something, open an
+issue describing what you want to do and wait for the maintainer's go-ahead
+before starting; ongoing claims are tracked on their issues.
 
-1. Pick an issue nobody has claimed (no assignee, no claim comment).
-2. Comment `Claiming this` with the branch name you'll use. The
-   maintainer assigns you. First claim wins; don't start on a claimed
-   task.
-3. One task per person at a time (two if they're small). Big tasks say
-   how to split them; claim one part at a time.
-4. Post a short progress comment at least once a day. A claim with no
+1. Once the maintainer agrees, comment `Claiming this` on the issue with
+   the branch name you'll use. First claim wins; don't start on work
+   someone else has claimed.
+2. Post a short progress comment at least once a day. A claim with no
    comment or pull request for 48 hours can be released.
-5. Link the pull request to the issue (`Closes #N`). If you give up, say
+3. Link the pull request to the issue (`Closes #N`). If you give up, say
    so on the issue so someone else can take it.
 
 Found a new bug? Open an issue for it; don't fix it inside an unrelated
-pull request. Something big missing that isn't listed? Open an issue
-proposing it as a `[task]`.
+pull request.
 
 ## Areas
 
 Who owns what. Ask the owner on GitHub before changing their area in a
-large way; small fixes anywhere are welcome with a test.
+large way; small fixes anywhere are welcome with a test. The hand-written
+areas below stay with their owners until the engine port switches that
+system over to the translated code.
 
 | Area | Owner | Notes |
 | --- | --- | --- |
@@ -98,15 +130,18 @@ large way; small fixes anywhere are welcome with a test.
 | Companions, Caravan, casinos (base game) | Chazm | Dead Money's versions overlap: coordinate. |
 | Performance (M4) | Chazm | Measure before and after; no behaviour changes. |
 | Dead Money (DLC01), crafting and the recipe menu | Dead Money contributor | docs/HANDOFF_DEAD_MONEY.md. |
-| macOS / Metal port | open | A fork has a start (`abusager13`); claim it on GitHub. |
+| macOS / Metal port | open | Pull request #108 (`abusager13`) is a start; coordinate there. |
+| Linux port | open | #61; pull requests #62 and #91 are starts. |
+| Engine port: translating the executable, frame order, game-state model and saves, wiring systems into the game | maintainer | ENGINE_PORT_PLAN, ENGINE_CRATE, FRAME_SKELETON, ENGINE_STATE. Not open for contributions. |
 
-Everything else is open through the `[task]` issues.
+For anything else, open an issue first.
 
 ## What every pull request must show
 
 1. **Checks.** From the root: `cargo test --workspace`,
-   `cargo clippy --workspace --all-targets`, `cargo fmt --all -- --check`.
-   In `viewer/`: `cargo test`, `cargo clippy --all-targets`,
+   `cargo clippy --workspace --all-targets -- -D warnings`,
+   `cargo fmt --all -- --check`. In `viewer/`: `cargo test`,
+   `cargo clippy --all-targets -- -D warnings`,
    `cargo fmt --all -- --check`, `cargo build --release`. GitHub runs the
    same checks (`check (core)`, `check (viewer)`) and they must pass.
    `cargo test` includes a repository hygiene check that rejects game or
@@ -138,8 +173,8 @@ Everything else is open through the `[task]` issues.
 5. **Tests.** A regression test for each behaviour fix, with inputs built
    from scratch by the `testdata` crate. Tests never need game files.
 6. **Docs.** The system's topic page in `docs/` says what is done, what is
-   traced and what is missing. Add a short line to
-   [docs/MILESTONES.md](docs/MILESTONES.md).
+   traced and what is missing. The maintainer updates
+   [docs/MILESTONES.md](docs/MILESTONES.md) when a milestone moves.
 7. **AI assistance.** Say which tools helped and with what. You remain
    responsible for the change: review the code and the claims, and run
    the checks yourself.
@@ -174,4 +209,4 @@ merged ([docs/GOVERNANCE.md](docs/GOVERNANCE.md)).
 
 If you stop partway, leave the next person (or agent) a short note in the
 system's topic page: what works, what's traced, what's left, and one next
-action. Update the milestone tracker with evidence, not just claims.
+action, with evidence rather than claims.
